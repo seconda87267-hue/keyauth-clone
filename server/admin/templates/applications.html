@@ -1,0 +1,53 @@
+{% extends "base.html" %}
+{% block title %}Applications{% endblock %}
+{% block app_active %}active{% endblock %}
+{% block content %}
+<h1 style="margin-bottom: 25px;">Manage Applications</h1>
+
+<div class="card">
+    <h3>Create New Application</h3>
+    <form method="post" action="/admin/applications/create" class="form-inline">
+        <div class="form-group">
+            <label>Application Name</label>
+            <input type="text" name="name" placeholder="My App" required style="width:250px;">
+        </div>
+        <button type="submit" class="btn btn-primary">Create</button>
+    </form>
+</div>
+
+<div class="card">
+    <table>
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Name</th>
+                <th>API Key</th>
+                <th>API Secret</th>
+                <th>Licenses</th>
+                <th>Created</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for a in apps %}
+            <tr>
+                <td>{{ a.id }}</td>
+                <td><strong>{{ a.name }}</strong></td>
+                <td class="mono">{{ a.api_key[:16] }}...</td>
+                <td class="mono">{{ a.api_secret[:16] }}...</td>
+                <td>{{ a.lic_count }}</td>
+                <td class="mono">{{ a.created_at.strftime('%Y-%m-%d %H:%M') if a.created_at else '-' }}</td>
+                <td>
+                    <a href="/admin/applications/credentials/{{ a.id }}" class="btn btn-sm btn-primary">Credentials</a>
+                    <form method="post" action="/admin/applications/delete/{{ a.id }}" style="display:inline;" onsubmit="return confirm('Delete application {{ a.name }}? Licenses will be unlinked.')">
+                        <button type="submit" class="btn btn-sm btn-danger">Delete</button>
+                    </form>
+                </td>
+            </tr>
+            {% else %}
+            <tr><td colspan="7" style="text-align:center;color:#666;">No applications yet. Create one above.</td></tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}

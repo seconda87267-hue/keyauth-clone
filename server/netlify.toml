@@ -1,0 +1,15 @@
+[build]
+  base = "server"
+  functions = "netlify/functions"
+
+[[redirects]]
+  from = "/*"
+  to = "/.netlify/functions/api/:splat"
+  status = 200
+  force = true
+
+[functions]
+  included_files = ["admin/templates/**"]
+
+[build.environment]
+  PYTHON_VERSION = "3.12"

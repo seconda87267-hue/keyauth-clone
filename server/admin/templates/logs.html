@@ -1,0 +1,54 @@
+{% extends "base.html" %}
+{% block title %}Logs{% endblock %}
+{% block logs_active %}active{% endblock %}
+{% block content %}
+<h1 style="margin-bottom: 25px;">Activity Logs ({{ total }})</h1>
+
+<div class="card">
+    <table>
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Timestamp</th>
+                <th>License</th>
+                <th>Action</th>
+                <th>Detail</th>
+                <th>IP</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for log in logs %}
+            <tr>
+                <td>{{ log.id }}</td>
+                <td class="mono">{{ log.timestamp.strftime('%Y-%m-%d %H:%M:%S') }}</td>
+                <td class="mono">{{ log.license_key or '-' }}</td>
+                <td>
+                    {% if log.action == 'LOGIN_OK' %}<span class="badge badge-green">{{ log.action }}</span>
+                    {% elif log.action == 'LOGIN_FAIL' %}<span class="badge badge-red">{{ log.action }}</span>
+                    {% elif 'HWID' in log.action %}<span class="badge badge-blue">{{ log.action }}</span>
+                    {% elif 'BAN' in log.action %}<span class="badge badge-red">{{ log.action }}</span>
+                    {% else %}<span class="badge badge-yellow">{{ log.action }}</span>
+                    {% endif %}
+                </td>
+                <td style="max-width: 400px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">{{ log.detail or '-' }}</td>
+                <td class="mono">{{ log.ip_address or '-' }}</td>
+            </tr>
+            {% else %}
+            <tr><td colspan="6" style="text-align: center; color: #666;">No logs found</td></tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+{% if total_pages > 1 %}
+<div class="pagination">
+    {% if page > 1 %}
+    <a href="/admin/logs?page={{ page - 1 }}">← Prev</a>
+    {% endif %}
+    <span style="padding:6px 12px;color:#888;">Page {{ page }} of {{ total_pages }}</span>
+    {% if page < total_pages %}
+    <a href="/admin/logs?page={{ page + 1 }}">Next →</a>
+    {% endif %}
+</div>
+{% endif %}
+{% endblock %}

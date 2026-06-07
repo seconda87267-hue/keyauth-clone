@@ -1,0 +1,88 @@
+{% extends "base.html" %}
+{% block title %}Dashboard{% endblock %}
+{% block dash_active %}active{% endblock %}
+{% block content %}
+<h1 style="margin-bottom: 25px;">Admin Dashboard</h1>
+
+<div class="stats">
+    <div class="stat-card">
+        <div class="value">{{ total_apps }}</div>
+        <div class="label">Applications</div>
+    </div>
+    <div class="stat-card">
+        <div class="value">{{ total }}</div>
+        <div class="label">Total Licenses</div>
+    </div>
+    <div class="stat-card">
+        <div class="value">{{ active }}</div>
+        <div class="label">Active</div>
+    </div>
+    <div class="stat-card">
+        <div class="value">{{ banned }}</div>
+        <div class="label">Banned</div>
+    </div>
+    <div class="stat-card">
+        <div class="value">{{ bound }}</div>
+        <div class="label">HWID Bound</div>
+    </div>
+</div>
+
+<div class="card">
+    <h3>Quick Generate Keys</h3>
+    <form method="post" action="/admin/generate" class="form-inline">
+        <div class="form-group">
+            <label>Count</label>
+            <input type="number" name="count" value="1" min="1" max="100">
+        </div>
+        <div class="form-group">
+            <label>Expiry (days, 0 = never)</label>
+            <input type="number" name="expiry_days" value="30" min="0">
+        </div>
+        <div class="form-group">
+            <label>App (optional)</label>
+            <select name="app_id">
+                <option value="0">None</option>
+                {% for a in apps %}
+                <option value="{{ a.id }}">{{ a.name }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <button type="submit" class="btn btn-primary">Generate</button>
+    </form>
+</div>
+
+<div class="card">
+    <h3>Recent Activity</h3>
+    <table>
+        <thead>
+            <tr>
+                <th>Timestamp</th>
+                <th>License</th>
+                <th>Action</th>
+                <th>Detail</th>
+                <th>IP</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for log in logs %}
+            <tr>
+                <td class="mono">{{ log.timestamp.strftime('%Y-%m-%d %H:%M:%S') }}</td>
+                <td class="mono">{{ log.license_key or '-' }}</td>
+                <td>
+                    {% if log.action == 'LOGIN_OK' %}<span class="badge badge-green">{{ log.action }}</span>
+                    {% elif log.action == 'LOGIN_FAIL' %}<span class="badge badge-red">{{ log.action }}</span>
+                    {% elif log.action == 'HWID_BIND' %}<span class="badge badge-blue">{{ log.action }}</span>
+                    {% elif log.action == 'HWID_RESET' %}<span class="badge badge-yellow">{{ log.action }}</span>
+                    {% else %}<span class="badge">{{ log.action }}</span>
+                    {% endif %}
+                </td>
+                <td style="max-width: 300px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">{{ log.detail or '-' }}</td>
+                <td class="mono">{{ log.ip_address or '-' }}</td>
+            </tr>
+            {% else %}
+            <tr><td colspan="5" style="text-align: center; color: #666;">No logs yet</td></tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}
