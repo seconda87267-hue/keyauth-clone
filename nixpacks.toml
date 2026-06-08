@@ -1,5 +1,5 @@
 [phases.setup]
-nixPkgs = ["python3", "uvicorn"]
+nixPkgs = ["python3"]
 
 [phases.install]
 cmds = ["pip install -r server/requirements.txt"]
