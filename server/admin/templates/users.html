@@ -1,0 +1,55 @@
+{% extends "base.html" %}
+{% block title %}Users{% endblock %}
+{% block users_active %}active{% endblock %}
+{% block content %}
+<h1 style="margin-bottom:25px;">Users</h1>
+<p style="color:#888;margin-bottom:20px;">After someone registers for your app with a license, they will appear here.</p>
+
+<div class="card">
+    <table>
+        <thead>
+            <tr>
+                <th>License Key</th>
+                <th>App ID</th>
+                <th>App Secret</th>
+                <th>Application</th>
+                <th>HWID</th>
+                <th>IP</th>
+                <th>Last Login</th>
+                <th>Expires</th>
+                <th>Status</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for lic, app, ip in users %}
+            <tr>
+                <td class="mono">{{ lic.license_key }}</td>
+                <td class="mono">{{ app.api_key if app else '-' }}</td>
+                <td class="mono">{{ app.api_secret[:20] + '...' if app and app.api_secret|length > 20 else (app.api_secret if app else '-') }}</td>
+                <td>{{ app.name if app else '-' }}</td>
+                <td class="mono" title="{{ lic.hwid }}">{{ lic.hwid[:20] + '...' if lic.hwid and lic.hwid|length > 20 else lic.hwid }}</td>
+                <td class="mono">{{ ip }}</td>
+                <td>{{ lic.last_login.strftime('%Y-%m-%d %H:%M') if lic.last_login else '-' }}</td>
+                <td>{{ lic.expires.strftime('%Y-%m-%d') if lic.expires else 'Never' }}</td>
+                <td>
+                    {% if lic.banned %}<span class="badge badge-red">Banned</span>
+                    {% elif lic.expires and lic.expires < now %}<span class="badge badge-red">Expired</span>
+                    {% else %}<span class="badge badge-green">Active</span>
+                    {% endif %}
+                </td>
+            </tr>
+            {% else %}
+            <tr><td colspan="9" style="text-align:center;color:#666;padding:30px;">No users yet. Log in with a license to see them here.</td></tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+{% if total_pages > 1 %}
+<div class="pagination">
+    {% if page > 1 %}<a href="/admin/users?page={{ page - 1 }}">&laquo; Prev</a>{% endif %}
+    <span style="color:#888;padding:6px 12px;">Page {{ page }} / {{ total_pages }}</span>
+    {% if page < total_pages %}<a href="/admin/users?page={{ page + 1 }}">Next &raquo;</a>{% endif %}
+</div>
+{% endif %}
+{% endblock %}

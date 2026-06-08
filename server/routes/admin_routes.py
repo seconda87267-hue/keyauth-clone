@@ -196,6 +196,44 @@ def admin_app_credentials(request: Request, app_id: int, db: Session = Depends(g
 
 
 # ---------------------------------------------------------------------------
+# USERS
+# ---------------------------------------------------------------------------
+@router.get("/users", response_class=HTMLResponse)
+def admin_users(request: Request, page: int = 1, db: Session = Depends(get_db)):
+    login_required(request)
+    per_page = 50
+    offset = (page - 1) * per_page
+    users = (
+        db.query(License, Application)
+        .outerjoin(Application, License.app_id == Application.id)
+        .filter(License.hwid != None)
+        .order_by(desc(License.last_login))
+        .offset(offset)
+        .limit(per_page)
+        .all()
+    )
+    total = db.query(License).filter(License.hwid != None).count()
+    total_pages = (total + per_page - 1) // per_page
+
+    # Get latest IP for each license from session tokens
+    user_data = []
+    for lic, app in users:
+        last_session = (
+            db.query(SessionToken.ip_address)
+            .filter(SessionToken.license_id == lic.id)
+            .order_by(desc(SessionToken.created_at))
+            .first()
+        )
+        ip = last_session[0] if last_session else "-"
+        user_data.append((lic, app, ip))
+
+    return templates.TemplateResponse(request, "users.html", {
+        "users": user_data, "page": page, "total_pages": total_pages,
+        "total": total, "now": datetime.utcnow()
+    })
+
+
+# ---------------------------------------------------------------------------
 # LOGS
 # ---------------------------------------------------------------------------
 @router.get("/logs", response_class=HTMLResponse)
@@ -208,6 +246,46 @@ def admin_logs(request: Request, page: int = 1, db: Session = Depends(get_db)):
     total_pages = (total + per_page - 1) // per_page
     return templates.TemplateResponse(request, "logs.html", {
         "logs": logs, "page": page, "total_pages": total_pages, "total": total
+    })
+
+
+# ---------------------------------------------------------------------------
+# ADMIN CREDENTIALS
+# ---------------------------------------------------------------------------
+@router.get("/credentials", response_class=HTMLResponse)
+def admin_credentials_page(request: Request):
+    login_required(request)
+    from config import ADMIN_USERNAME, ADMIN_PASSWORD
+    return templates.TemplateResponse(request, "credentials_admin.html", {
+        "admin_user": ADMIN_USERNAME, "admin_pass": ADMIN_PASSWORD, "saved": False
+    })
+
+
+@router.post("/credentials", response_class=HTMLResponse)
+def admin_credentials_save(request: Request, username: str = Form(...), password: str = Form(...)):
+    login_required(request)
+    env_path = Path(__file__).resolve().parent.parent / ".env"
+    if env_path.exists():
+        content = env_path.read_text(encoding="utf-8")
+        lines = content.splitlines(keepends=True)
+        new_lines = []
+        has_user, has_pass = False, False
+        for line in lines:
+            if line.startswith("ADMIN_USERNAME="):
+                new_lines.append(f"ADMIN_USERNAME={username}\n")
+                has_user = True
+            elif line.startswith("ADMIN_PASSWORD="):
+                new_lines.append(f"ADMIN_PASSWORD={password}\n")
+                has_pass = True
+            else:
+                new_lines.append(line)
+        if not has_user:
+            new_lines.append(f"ADMIN_USERNAME={username}\n")
+        if not has_pass:
+            new_lines.append(f"ADMIN_PASSWORD={password}\n")
+        env_path.write_text("".join(new_lines), encoding="utf-8")
+    return templates.TemplateResponse(request, "credentials_admin.html", {
+        "admin_user": username, "admin_pass": password, "saved": True
     })
 
 
