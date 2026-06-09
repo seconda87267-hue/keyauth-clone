@@ -65,6 +65,10 @@ def login(request: Request, data: LoginRequest, db: Session = Depends(get_db)):
         return {"success": False, "message": "License has expired"}
 
     if lic.hwid is None:
+        existing = db.query(License).filter(License.hwid == hwid, License.id != lic.id).first()
+        if existing:
+            log_action(db, license_key, "HWID_BIND_FAIL", f"HWID already bound to {existing.license_key}", ip)
+            return {"success": False, "message": "This HWID is already bound to another license key"}
         lic.hwid = hwid
         lic.hwid_bind_date = datetime.now(timezone.utc).replace(tzinfo=None)
         lic.ip_address = ip

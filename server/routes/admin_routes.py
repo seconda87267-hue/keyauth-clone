@@ -67,17 +67,23 @@ def admin_dashboard(request: Request, db: Session = Depends(get_db)):
 # LICENSES
 # ---------------------------------------------------------------------------
 @router.get("/licenses", response_class=HTMLResponse)
-def admin_licenses(request: Request, page: int = 1, db: Session = Depends(get_db)):
+def admin_licenses(request: Request, page: int = 1, search: str = "",
+                   db: Session = Depends(get_db)):
     login_required(request)
     per_page = 50
     offset = (page - 1) * per_page
-    licenses = db.query(License).order_by(desc(License.created_at)).offset(offset).limit(per_page).all()
-    total = db.query(License).count()
+    query = db.query(License)
+    if search.strip():
+        query = query.filter(License.hwid.ilike(f"%{search.strip()}%"))
+    licenses = query.order_by(desc(License.created_at)).offset(offset).limit(per_page).all()
+    total = query.count()
     total_pages = (total + per_page - 1) // per_page
     apps = db.query(Application).all()
+    flash = request.session.pop("flash", None)
     return templates.TemplateResponse(request, "licenses.html", {
         "licenses": licenses, "page": page, "total_pages": total_pages,
-        "total": total, "now": datetime.utcnow(), "apps": apps
+        "total": total, "now": datetime.utcnow(), "apps": apps,
+        "search": search, "flash": flash
     })
 
 
@@ -151,9 +157,14 @@ def admin_set_hwid(request: Request, license_id: int, hwid: str = Form(...), db:
     login_required(request)
     lic = db.query(License).filter(License.id == license_id).first()
     if lic:
-        lic.hwid = hwid.strip()
+        hwid_val = hwid.strip()
+        existing = db.query(License).filter(License.hwid == hwid_val, License.id != license_id).first()
+        if existing:
+            request.session["flash"] = f"HWID already bound to license {existing.license_key}"
+            return RedirectResponse(url="/admin/licenses", status_code=303)
+        lic.hwid = hwid_val
         lic.hwid_bind_date = datetime.utcnow()
-        log = Log(license_key=lic.license_key, action="HWID_SET", detail=f"HWID manually set to: {hwid[:16]}...")
+        log = Log(license_key=lic.license_key, action="HWID_SET", detail=f"HWID manually set to: {hwid_val[:16]}...")
         db.add(log)
         db.commit()
     return RedirectResponse(url="/admin/licenses", status_code=303)
