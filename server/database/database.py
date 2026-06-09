@@ -56,7 +56,20 @@ def init_db():
 
 def _run_migrations():
     engine = _get_engine()
+    dialect = engine.dialect.name
     with engine.connect() as conn:
-        conn.execute(text("ALTER TABLE licenses ADD COLUMN IF NOT EXISTS key_type VARCHAR(16) DEFAULT 'regular'"))
-        conn.execute(text("ALTER TABLE licenses ADD COLUMN IF NOT EXISTS prefix VARCHAR(16)"))
-        conn.commit()
+        if dialect == "sqlite":
+            try:
+                conn.execute(text("ALTER TABLE licenses ADD COLUMN key_type VARCHAR(16) DEFAULT 'regular'"))
+                conn.commit()
+            except Exception:
+                conn.rollback()
+            try:
+                conn.execute(text("ALTER TABLE licenses ADD COLUMN prefix VARCHAR(16)"))
+                conn.commit()
+            except Exception:
+                conn.rollback()
+        else:
+            conn.execute(text("ALTER TABLE licenses ADD COLUMN IF NOT EXISTS key_type VARCHAR(16) DEFAULT 'regular'"))
+            conn.execute(text("ALTER TABLE licenses ADD COLUMN IF NOT EXISTS prefix VARCHAR(16)"))
+            conn.commit()
