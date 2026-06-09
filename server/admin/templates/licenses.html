@@ -48,9 +48,10 @@
                 <th>Type</th>
                 <th>App</th>
                 <th>HWID</th>
+                <th>IP</th>
+                <th>Bound</th>
                 <th>Expires</th>
                 <th>Status</th>
-                <th>Created</th>
                 <th>Last Login</th>
                 <th>Actions</th>
             </tr>
@@ -74,7 +75,16 @@
                     {% endfor %}
                     {{ app_name.found or '-' }}
                 </td>
-                <td class="mono truncate">{{ lic.hwid[:24] + '...' if lic.hwid else 'None' }}</td>
+                <td class="mono" style="max-width:200px;overflow:auto;">
+                    {% if lic.hwid %}
+                    <span class="hwid-cell" title="{{ lic.hwid }}">{{ lic.hwid[:40] }}{{ '...' if lic.hwid|length > 40 }}</span>
+                    <button class="copy-btn" onclick="copyText('{{ lic.hwid }}')">Copy</button>
+                    {% else %}
+                    <span style="color:#666;">None</span>
+                    {% endif %}
+                </td>
+                <td class="mono">{{ lic.ip_address or '-' }}</td>
+                <td class="mono">{{ lic.hwid_bind_date.strftime('%Y-%m-%d %H:%M') if lic.hwid_bind_date else '-' }}</td>
                 <td class="mono">{{ lic.expires.strftime('%Y-%m-%d') if lic.expires else 'Never' }}</td>
                 <td>
                     {% if lic.banned %}
@@ -87,7 +97,6 @@
                     <span class="badge badge-yellow">Unused</span>
                     {% endif %}
                 </td>
-                <td class="mono">{{ lic.created_at.strftime('%Y-%m-%d') if lic.created_at else '-' }}</td>
                 <td class="mono">{{ lic.last_login.strftime('%Y-%m-%d %H:%M') if lic.last_login else '-' }}</td>
                 <td>
                     <form method="post" action="/admin/ban/{{ lic.id }}" style="display:inline;">
@@ -98,17 +107,52 @@
                     <form method="post" action="/admin/reset-hwid/{{ lic.id }}" style="display:inline;">
                         <button type="submit" class="btn btn-sm btn-warning" {% if not lic.hwid %}disabled style="opacity:0.5;"{% endif %}>Reset HWID</button>
                     </form>
+                    <button class="btn btn-sm btn-primary" onclick="showSetHwid({{ lic.id }})">Set HWID</button>
                     <form method="post" action="/admin/delete-license/{{ lic.id }}" style="display:inline;" onsubmit="return confirm('Delete license {{ lic.license_key }}?')">
                         <button type="submit" class="btn btn-sm btn-danger">Delete</button>
                     </form>
                 </td>
             </tr>
             {% else %}
-            <tr><td colspan="10" style="text-align:center;color:#666;">No licenses found. Generate some above.</td></tr>
+            <tr><td colspan="11" style="text-align:center;color:#666;">No licenses found. Generate some above.</td></tr>
             {% endfor %}
         </tbody>
     </table>
 </div>
+
+<div id="setHwidModal" style="display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.6);z-index:999;align-items:center;justify-content:center;">
+    <div style="background:#1a1a2e;padding:25px;border-radius:8px;border:1px solid #2a2a4a;max-width:500px;margin:10% auto;">
+        <h3 style="color:#7c5cfc;margin-bottom:15px;">Set HWID</h3>
+        <form method="post" id="setHwidForm">
+            <div class="form-group">
+                <label>HWID</label>
+                <input type="text" name="hwid" required style="width:100%;padding:8px 12px;background:#0f0f1a;border:1px solid #2a2a4a;border-radius:4px;color:#e0e0e0;font-family:monospace;">
+            </div>
+            <div style="display:flex;gap:10px;">
+                <button type="submit" class="btn btn-primary">Set HWID</button>
+                <button type="button" class="btn btn-warning" onclick="document.getElementById('setHwidModal').style.display='none'">Cancel</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+function copyText(text) {
+    navigator.clipboard.writeText(text).then(function() {
+        var btn = event.target;
+        var orig = btn.textContent;
+        btn.textContent = 'Copied!';
+        setTimeout(function() { btn.textContent = orig; }, 1500);
+    });
+}
+function showSetHwid(id) {
+    document.getElementById('setHwidForm').action = '/admin/set-hwid/' + id;
+    document.getElementById('setHwidModal').style.display = 'block';
+}
+document.getElementById('setHwidModal').addEventListener('click', function(e) {
+    if (e.target === this) this.style.display = 'none';
+});
+</script>
 
 {% if total_pages > 1 %}
 <div class="pagination">

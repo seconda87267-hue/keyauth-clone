@@ -66,6 +66,8 @@ def login(request: Request, data: LoginRequest, db: Session = Depends(get_db)):
 
     if lic.hwid is None:
         lic.hwid = hwid
+        lic.hwid_bind_date = datetime.now(timezone.utc).replace(tzinfo=None)
+        lic.ip_address = ip
         db.commit()
         log_action(db, license_key, "HWID_BIND", f"Bound HWID: {hwid[:16]}...", ip)
     elif lic.hwid != hwid:
@@ -73,6 +75,7 @@ def login(request: Request, data: LoginRequest, db: Session = Depends(get_db)):
         return {"success": False, "message": "HWID mismatch - this key is bound to another machine"}
 
     lic.last_login = datetime.now(timezone.utc).replace(tzinfo=None)
+    lic.ip_address = ip
     token = create_session_token(lic.id, license_key)
 
     session_expiry = datetime.now(timezone.utc).replace(tzinfo=None) + timedelta(hours=24)

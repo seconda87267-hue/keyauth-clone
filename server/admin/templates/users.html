@@ -16,13 +16,14 @@
                 <th>Application</th>
                 <th>HWID</th>
                 <th>IP</th>
+                <th>Bound</th>
                 <th>Last Login</th>
                 <th>Expires</th>
                 <th>Status</th>
             </tr>
         </thead>
         <tbody>
-            {% for lic, app, ip in users %}
+            {% for lic, app in users %}
             <tr>
                 <td class="mono">{{ lic.license_key }}</td>
                 <td>
@@ -35,8 +36,14 @@
                 <td class="mono">{{ app.api_key if app else '-' }}</td>
                 <td class="mono">{{ app.api_secret[:20] + '...' if app and app.api_secret|length > 20 else (app.api_secret if app else '-') }}</td>
                 <td>{{ app.name if app else '-' }}</td>
-                <td class="mono" title="{{ lic.hwid }}">{{ lic.hwid[:20] + '...' if lic.hwid and lic.hwid|length > 20 else lic.hwid }}</td>
-                <td class="mono">{{ ip }}</td>
+                <td class="mono" style="max-width:180px;overflow:auto;">
+                    {% if lic.hwid %}
+                    <span title="{{ lic.hwid }}">{{ lic.hwid[:32] }}{{ '...' if lic.hwid|length > 32 }}</span>
+                    <button class="copy-btn" onclick="copyText('{{ lic.hwid }}')">Copy</button>
+                    {% else %}-{% endif %}
+                </td>
+                <td class="mono">{{ lic.ip_address or '-' }}</td>
+                <td class="mono">{{ lic.hwid_bind_date.strftime('%Y-%m-%d %H:%M') if lic.hwid_bind_date else '-' }}</td>
                 <td>{{ lic.last_login.strftime('%Y-%m-%d %H:%M') if lic.last_login else '-' }}</td>
                 <td>{{ lic.expires.strftime('%Y-%m-%d') if lic.expires else 'Never' }}</td>
                 <td>
@@ -47,7 +54,7 @@
                 </td>
             </tr>
             {% else %}
-            <tr><td colspan="10" style="text-align:center;color:#666;padding:30px;">No users yet. Log in with a license to see them here.</td></tr>
+            <tr><td colspan="11" style="text-align:center;color:#666;padding:30px;">No users yet. Log in with a license to see them here.</td></tr>
             {% endfor %}
         </tbody>
     </table>
@@ -60,4 +67,15 @@
     {% if page < total_pages %}<a href="/admin/users?page={{ page + 1 }}">Next &raquo;</a>{% endif %}
 </div>
 {% endif %}
+
+<script>
+function copyText(text) {
+    navigator.clipboard.writeText(text).then(function() {
+        var btn = event.target;
+        var orig = btn.textContent;
+        btn.textContent = 'Copied!';
+        setTimeout(function() { btn.textContent = orig; }, 1500);
+    });
+}
+</script>
 {% endblock %}

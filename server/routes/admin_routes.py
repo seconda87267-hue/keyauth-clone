@@ -139,7 +139,21 @@ def admin_reset_hwid(request: Request, license_id: int, db: Session = Depends(ge
     if lic:
         old_hwid = lic.hwid
         lic.hwid = None
+        lic.hwid_bind_date = None
         log = Log(license_key=lic.license_key, action="HWID_RESET", detail=f"HWID cleared (was: {old_hwid[:16] if old_hwid else 'None'}...)")
+        db.add(log)
+        db.commit()
+    return RedirectResponse(url="/admin/licenses", status_code=303)
+
+
+@router.post("/set-hwid/{license_id}")
+def admin_set_hwid(request: Request, license_id: int, hwid: str = Form(...), db: Session = Depends(get_db)):
+    login_required(request)
+    lic = db.query(License).filter(License.id == license_id).first()
+    if lic:
+        lic.hwid = hwid.strip()
+        lic.hwid_bind_date = datetime.utcnow()
+        log = Log(license_key=lic.license_key, action="HWID_SET", detail=f"HWID manually set to: {hwid[:16]}...")
         db.add(log)
         db.commit()
     return RedirectResponse(url="/admin/licenses", status_code=303)
@@ -222,17 +236,7 @@ def admin_users(request: Request, page: int = 1, db: Session = Depends(get_db)):
     total = db.query(License).filter(License.hwid != None).count()
     total_pages = (total + per_page - 1) // per_page
 
-    # Get latest IP for each license from session tokens
-    user_data = []
-    for lic, app in users:
-        last_session = (
-            db.query(SessionToken.ip_address)
-            .filter(SessionToken.license_id == lic.id)
-            .order_by(desc(SessionToken.created_at))
-            .first()
-        )
-        ip = last_session[0] if last_session else "-"
-        user_data.append((lic, app, ip))
+    user_data = [(lic, app) for lic, app in users]
 
     return templates.TemplateResponse(request, "users.html", {
         "users": user_data, "page": page, "total_pages": total_pages,
