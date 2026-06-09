@@ -10,6 +10,7 @@
         <thead>
             <tr>
                 <th>License Key</th>
+                <th>Type</th>
                 <th>App ID</th>
                 <th>App Secret</th>
                 <th>Application</th>
@@ -24,6 +25,13 @@
             {% for lic, app, ip in users %}
             <tr>
                 <td class="mono">{{ lic.license_key }}</td>
+                <td>
+                    {% if lic.key_type == 'vip' %}
+                    <span class="badge badge-purple">VIP</span>
+                    {% else %}
+                    <span class="badge badge-blue">Regular</span>
+                    {% endif %}
+                </td>
                 <td class="mono">{{ app.api_key if app else '-' }}</td>
                 <td class="mono">{{ app.api_secret[:20] + '...' if app and app.api_secret|length > 20 else (app.api_secret if app else '-') }}</td>
                 <td>{{ app.name if app else '-' }}</td>
@@ -39,7 +47,7 @@
                 </td>
             </tr>
             {% else %}
-            <tr><td colspan="9" style="text-align:center;color:#666;padding:30px;">No users yet. Log in with a license to see them here.</td></tr>
+            <tr><td colspan="10" style="text-align:center;color:#666;padding:30px;">No users yet. Log in with a license to see them here.</td></tr>
             {% endfor %}
         </tbody>
     </table>

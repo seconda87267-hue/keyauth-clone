@@ -86,6 +86,8 @@ def login(request: Request, data: LoginRequest, db: Session = Depends(get_db)):
         "success": True,
         "token": token,
         "expires": lic.expires.isoformat() if lic.expires else None,
+        "key_type": lic.key_type,
+        "prefix": lic.prefix,
         "message": "Authenticated successfully"
     }
 

@@ -1,4 +1,4 @@
-from sqlalchemy import create_engine, event
+from sqlalchemy import create_engine, event, text
 from sqlalchemy.orm import sessionmaker, declarative_base
 from config import DATABASE_URL
 
@@ -51,3 +51,12 @@ def get_db():
 
 def init_db():
     Base.metadata.create_all(bind=_get_engine())
+    _run_migrations()
+
+
+def _run_migrations():
+    engine = _get_engine()
+    with engine.connect() as conn:
+        conn.execute(text("ALTER TABLE licenses ADD COLUMN IF NOT EXISTS key_type VARCHAR(16) DEFAULT 'regular'"))
+        conn.execute(text("ALTER TABLE licenses ADD COLUMN IF NOT EXISTS prefix VARCHAR(16)"))
+        conn.commit()

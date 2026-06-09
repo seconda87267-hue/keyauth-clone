@@ -24,6 +24,17 @@
                 {% endfor %}
             </select>
         </div>
+        <div class="form-group">
+            <label>Key Type</label>
+            <select name="key_type">
+                <option value="regular">Regular</option>
+                <option value="vip">VIP</option>
+            </select>
+        </div>
+        <div class="form-group">
+            <label>Prefix (optional)</label>
+            <input type="text" name="prefix" placeholder="e.g. VIP" style="max-width:120px;">
+        </div>
         <button type="submit" class="btn btn-primary">Generate</button>
     </form>
 </div>
@@ -34,6 +45,7 @@
             <tr>
                 <th>ID</th>
                 <th>License Key</th>
+                <th>Type</th>
                 <th>App</th>
                 <th>HWID</th>
                 <th>Expires</th>
@@ -48,6 +60,13 @@
             <tr>
                 <td>{{ lic.id }}</td>
                 <td class="mono">{{ lic.license_key }}</td>
+                <td>
+                    {% if lic.key_type == 'vip' %}
+                    <span class="badge badge-purple">VIP</span>
+                    {% else %}
+                    <span class="badge badge-blue">Regular</span>
+                    {% endif %}
+                </td>
                 <td>
                     {% set app_name = namespace(found='') %}
                     {% for a in apps %}
@@ -85,7 +104,7 @@
                 </td>
             </tr>
             {% else %}
-            <tr><td colspan="9" style="text-align:center;color:#666;">No licenses found. Generate some above.</td></tr>
+            <tr><td colspan="10" style="text-align:center;color:#666;">No licenses found. Generate some above.</td></tr>
             {% endfor %}
         </tbody>
     </table>

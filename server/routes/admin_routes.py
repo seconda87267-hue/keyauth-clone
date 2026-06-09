@@ -83,19 +83,26 @@ def admin_licenses(request: Request, page: int = 1, db: Session = Depends(get_db
 
 @router.post("/generate")
 def admin_generate(request: Request, count: int = Form(1), expiry_days: int = Form(30),
-                   app_id: int = Form(0), db: Session = Depends(get_db)):
+                   app_id: int = Form(0), key_type: str = Form("regular"),
+                   prefix: str = Form(""), db: Session = Depends(get_db)):
     login_required(request)
 
     def gen_key():
         chars = string.ascii_uppercase + string.digits
-        return "-".join("".join(secrets.choice(chars) for _ in range(6)) for _ in range(3))
+        raw = "-".join("".join(secrets.choice(chars) for _ in range(6)) for _ in range(3))
+        if prefix.strip():
+            return prefix.strip().upper() + "-" + raw
+        return raw
 
     keys = []
     for _ in range(count):
         key = gen_key()
         expiry = datetime.utcnow() + timedelta(days=expiry_days) if expiry_days > 0 else None
         app_id_val = app_id if app_id > 0 else None
-        lic = License(license_key=key, expires=expiry, app_id=app_id_val)
+        lic = License(
+            license_key=key, expires=expiry, app_id=app_id_val,
+            key_type=key_type, prefix=prefix.strip().upper() if prefix.strip() else None
+        )
         db.add(lic)
         keys.append(key)
     db.commit()

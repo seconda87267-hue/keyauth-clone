@@ -23,6 +23,8 @@ class License(Base):
     hwid = Column(Text, nullable=True)
     expires = Column(DateTime, nullable=True)
     banned = Column(Boolean, default=False)
+    key_type = Column(String(16), default="regular")
+    prefix = Column(String(16), nullable=True)
     created_at = Column(DateTime, server_default=func.now())
     last_login = Column(DateTime, nullable=True)
     note = Column(Text, nullable=True)
