@@ -57,23 +57,20 @@ def init_db():
 def _run_migrations():
     engine = _get_engine()
     dialect = engine.dialect.name
-    cols = [
-        ("key_type", "VARCHAR(16) DEFAULT 'regular'"),
-        ("prefix", "VARCHAR(16)"),
-        ("hwid_bind_date", "TIMESTAMP"),
-        ("ip_address", "VARCHAR(45)"),
-    ]
+    cols = {
+        "key_type": "VARCHAR(16) DEFAULT 'regular'",
+        "prefix": "VARCHAR(16)",
+        "hwid_bind_date": "TIMESTAMP",
+        "ip_address": "VARCHAR(45)",
+        "hwid_lock": "INTEGER DEFAULT 1" if dialect == "sqlite" else "BOOLEAN DEFAULT TRUE",
+    }
     with engine.connect() as conn:
-        for col_name, col_type in cols:
-            if dialect == "sqlite":
-                try:
-                    conn.execute(text(f"ALTER TABLE licenses ADD COLUMN {col_name} {col_type}"))
-                    conn.commit()
-                except Exception:
-                    conn.rollback()
-            else:
-                try:
-                    conn.execute(text(f"ALTER TABLE licenses ADD COLUMN IF NOT EXISTS {col_name} {col_type}"))
-                    conn.commit()
-                except Exception:
-                    conn.rollback()
+        for col_name, col_type in cols.items():
+            try:
+                sql = f"ALTER TABLE licenses ADD COLUMN {col_name} {col_type}"
+                if dialect != "sqlite":
+                    sql = sql.replace("ADD COLUMN", "ADD COLUMN IF NOT EXISTS")
+                conn.execute(text(sql))
+                conn.commit()
+            except Exception:
+                conn.rollback()

@@ -67,6 +67,7 @@
                 <th>IP</th>
                 <th>Bound</th>
                 <th>Expires</th>
+                <th>HWID Lock</th>
                 <th>Status</th>
                 <th>Last Login</th>
                 <th>Actions</th>
@@ -103,6 +104,13 @@
                 <td class="mono">{{ lic.hwid_bind_date.strftime('%Y-%m-%d %H:%M') if lic.hwid_bind_date else '-' }}</td>
                 <td class="mono">{{ lic.expires.strftime('%Y-%m-%d') if lic.expires else 'Never' }}</td>
                 <td>
+                    <form method="post" action="/admin/toggle-hwid-lock/{{ lic.id }}" style="display:inline;">
+                        <button type="submit" class="btn btn-sm {% if lic.hwid_lock %}btn-success{% else %}btn-warning{% endif %}">
+                            {{ 'ON' if lic.hwid_lock else 'OFF' }}
+                        </button>
+                    </form>
+                </td>
+                <td>
                     {% if lic.banned %}
                     <span class="badge badge-red">Banned</span>
                     {% elif lic.expires and lic.expires < now %}
@@ -130,7 +138,7 @@
                 </td>
             </tr>
             {% else %}
-            <tr><td colspan="11" style="text-align:center;color:#666;">No licenses found. Generate some above.</td></tr>
+            <tr><td colspan="12" style="text-align:center;color:#666;">No licenses found. Generate some above.</td></tr>
             {% endfor %}
         </tbody>
     </table>

@@ -21,6 +21,7 @@ class License(Base):
     app_id = Column(Integer, ForeignKey("applications.id"), nullable=True, index=True)
     license_key = Column(String(64), unique=True, nullable=False, index=True)
     hwid = Column(Text, nullable=True)
+    hwid_lock = Column(Boolean, default=True)
     hwid_bind_date = Column(DateTime, nullable=True)
     ip_address = Column(String(45), nullable=True)
     expires = Column(DateTime, nullable=True)

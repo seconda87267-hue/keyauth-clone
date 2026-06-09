@@ -64,7 +64,9 @@ def login(request: Request, data: LoginRequest, db: Session = Depends(get_db)):
         log_action(db, license_key, "LOGIN_FAIL", "Expired license", ip)
         return {"success": False, "message": "License has expired"}
 
-    if lic.hwid is None:
+    if not lic.hwid_lock:
+        pass
+    elif lic.hwid is None:
         existing = db.query(License).filter(License.hwid == hwid, License.id != lic.id).first()
         if existing:
             log_action(db, license_key, "HWID_BIND_FAIL", f"HWID already bound to {existing.license_key}", ip)
@@ -95,6 +97,7 @@ def login(request: Request, data: LoginRequest, db: Session = Depends(get_db)):
         "expires": lic.expires.isoformat() if lic.expires else None,
         "key_type": lic.key_type,
         "prefix": lic.prefix,
+        "hwid_lock": lic.hwid_lock,
         "message": "Authenticated successfully"
     }
 

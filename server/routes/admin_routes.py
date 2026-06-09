@@ -138,6 +138,19 @@ def admin_toggle_ban(request: Request, license_id: int, db: Session = Depends(ge
     return RedirectResponse(url="/admin/licenses", status_code=303)
 
 
+@router.post("/toggle-hwid-lock/{license_id}")
+def admin_toggle_hwid_lock(request: Request, license_id: int, db: Session = Depends(get_db)):
+    login_required(request)
+    lic = db.query(License).filter(License.id == license_id).first()
+    if lic:
+        lic.hwid_lock = not lic.hwid_lock
+        log = Log(license_key=lic.license_key, action="HWID_LOCK_TOGGLE",
+                  detail=f"HWID lock {'enabled' if lic.hwid_lock else 'disabled'}")
+        db.add(log)
+        db.commit()
+    return RedirectResponse(url="/admin/licenses", status_code=303)
+
+
 @router.post("/reset-hwid/{license_id}")
 def admin_reset_hwid(request: Request, license_id: int, db: Session = Depends(get_db)):
     login_required(request)
