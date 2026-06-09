@@ -15,6 +15,7 @@
                 <th>App Secret</th>
                 <th>Application</th>
                 <th>HWID</th>
+                <th>Lock</th>
                 <th>IP</th>
                 <th>Bound</th>
                 <th>Last Login</th>
@@ -42,6 +43,13 @@
                     <button class="copy-btn" onclick="copyText('{{ lic.hwid }}')">Copy</button>
                     {% else %}-{% endif %}
                 </td>
+                <td>
+                    {% if lic.hwid_lock %}
+                    <span class="badge badge-green" style="font-size:10px;">ON</span>
+                    {% else %}
+                    <span class="badge badge-yellow" style="font-size:10px;">OFF</span>
+                    {% endif %}
+                </td>
                 <td class="mono">{{ lic.ip_address or '-' }}</td>
                 <td class="mono">{{ lic.hwid_bind_date.strftime('%Y-%m-%d %H:%M') if lic.hwid_bind_date else '-' }}</td>
                 <td>{{ lic.last_login.strftime('%Y-%m-%d %H:%M') if lic.last_login else '-' }}</td>
@@ -54,7 +62,7 @@
                 </td>
             </tr>
             {% else %}
-            <tr><td colspan="11" style="text-align:center;color:#666;padding:30px;">No users yet. Log in with a license to see them here.</td></tr>
+            <tr><td colspan="12" style="text-align:center;color:#666;padding:30px;">No users yet. Log in with a license to see them here.</td></tr>
             {% endfor %}
         </tbody>
     </table>
