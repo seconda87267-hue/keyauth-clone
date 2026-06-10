@@ -1,0 +1,51 @@
+{% extends "base.html" %}
+{% block title %}Applications{% endblock %}
+{% block apps_active %}active{% endblock %}
+{% block content %}
+<h1 style="margin-bottom: 25px;">Available Applications</h1>
+
+<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:20px;">
+    {% for a in apps %}
+    <div class="card" style="display:flex;flex-direction:column;animation:scaleIn 0.3s ease;animation-delay:{{ loop.index * 0.1 }}s;animation-fill-mode:both;">
+        <div style="display:flex;align-items:center;gap:12px;margin-bottom:15px;">
+            <div style="width:40px;height:40px;border-radius:10px;background:linear-gradient(135deg,var(--primary),hsl(43,74%,49%));display:flex;align-items:center;justify-content:center;font-size:18px;color:#fff;font-weight:700;">{{ a.name[:1] }}</div>
+            <div>
+                <h3 style="margin:0;font-size:15px;">{{ a.name }}</h3>
+                <span style="font-size:11px;color:var(--muted-foreground);">App ID: {{ a.id }}</span>
+            </div>
+        </div>
+        <div style="background:rgba(0,0,0,0.2);border-radius:8px;padding:12px;margin-bottom:15px;">
+            <div style="display:grid;grid-template-columns:80px 1fr;gap:4px 10px;font-size:12px;">
+                <span style="color:var(--muted-foreground);">API Key:</span>
+                <span class="mono" style="color:var(--foreground);word-break:break-all;">{{ a.api_key[:20] }}...</span>
+                <span style="color:var(--muted-foreground);">Secret:</span>
+                <span class="mono" style="color:var(--foreground);word-break:break-all;">{{ a.api_secret[:20] }}...</span>
+            </div>
+        </div>
+        <form method="post" action="/admin/generate" class="form-inline" style="margin-top:auto;">
+            <input type="hidden" name="app_id" value="{{ a.id }}">
+            <div class="form-group" style="flex:1;min-width:80px;">
+                <label>Count</label>
+                <input type="number" name="count" value="1" min="1" max="100">
+            </div>
+            <div class="form-group" style="flex:1;min-width:100px;">
+                <label>Expiry (days)</label>
+                <input type="number" name="expiry_days" value="30" min="0">
+            </div>
+            <div class="form-group" style="flex:1;min-width:90px;">
+                <label>Key Type</label>
+                <select name="key_type">
+                    <option value="regular">Regular</option>
+                    <option value="vip">VIP</option>
+                </select>
+            </div>
+            <button type="submit" class="btn btn-primary" style="margin-top:16px;">Generate</button>
+        </form>
+    </div>
+    {% else %}
+    <div class="card" style="grid-column:1/-1;text-align:center;padding:40px;">
+        <p style="color:var(--muted-foreground);">No applications available. Contact admin to create apps.</p>
+    </div>
+    {% endfor %}
+</div>
+{% endblock %}

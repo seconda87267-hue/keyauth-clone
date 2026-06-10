@@ -91,9 +91,22 @@ def admin_dashboard(request: Request, db: Session = Depends(get_db)):
 def reseller_dashboard(request: Request, db: Session = Depends(get_db)):
     reseller_id = request.session.get("reseller_id")
     my_licenses = db.query(License).filter(License.created_by == reseller_id).count()
-    apps = db.query(Application).filter(Application.owner_id == reseller_id).all()
+    apps = db.query(Application).order_by(Application.id).all()
     return templates.TemplateResponse(request, "reseller_dashboard.html", {
         "total_keys": my_licenses, "apps": apps
+    })
+
+
+@router.get("/apps", response_class=HTMLResponse)
+def reseller_apps(request: Request, db: Session = Depends(get_db)):
+    login_required(request)
+    if not is_reseller(request):
+        return RedirectResponse(url="/admin/applications", status_code=302)
+    apps = db.query(Application).order_by(Application.id).all()
+    reseller_id = request.session.get("reseller_id")
+    my_licenses = db.query(License).filter(License.created_by == reseller_id).count()
+    return templates.TemplateResponse(request, "reseller_apps.html", {
+        "apps": apps, "total_keys": my_licenses
     })
 
 
