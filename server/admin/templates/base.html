@@ -7,7 +7,7 @@
     <link rel="icon" href="/static/logo.png">
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
-        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #0a0a0a; color: #e0e0e0; min-height: 100vh; overflow-x: hidden; cursor: url('/static/cursor.png') 16 16, auto; }
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #0a0a0a; color: #e0e0e0; min-height: 100vh; overflow-x: hidden; cursor: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='32' height='32'%3E%3Cdefs%3E%3Cfilter id='g'%3E%3CfeGaussianBlur stdDeviation='0.5'/%3E%3C/filter%3E%3C/defs%3E%3Cpolygon points='16,0 19,13 32,16 19,19 16,32 13,19 0,16 13,13' fill='none' stroke='%23cc0000' stroke-width='1.5' filter='url(%23g)'/%3E%3Cpolygon points='16,4 18,14 28,16 18,18 16,28 14,18 4,16 14,14' fill='none' stroke='%23ff1a1a' stroke-width='1'/%3E%3Ccircle cx='16' cy='16' r='2' fill='%23ffffff'/%3E%3Cline x1='0' y1='16' x2='8' y2='16' stroke='%23cc0000' stroke-width='0.8'/%3E%3Cline x1='24' y1='16' x2='32' y2='16' stroke='%23cc0000' stroke-width='0.8'/%3E%3Cline x1='16' y1='0' x2='16' y2='8' stroke='%23cc0000' stroke-width='0.8'/%3E%3Cline x1='16' y1='24' x2='16' y2='32' stroke='%23cc0000' stroke-width='0.8'/%3E%3C/svg%3E") 16 16, auto; }
         ::-webkit-scrollbar { width: 6px; }
         ::-webkit-scrollbar-track { background: #0a0a0a; }
         ::-webkit-scrollbar-thumb { background: #cc0000; border-radius: 3px; }
@@ -86,7 +86,7 @@
         .logout a { color: #8b0000 !important; }
         .logout a:hover { color: #cc0000 !important; }
 
-        a, button, .btn, .copy-btn, input, select, .badge, th, tr { cursor: url('/static/cursor.png') 16 16, pointer; }
+        a, button, .btn, .copy-btn, input, select, .badge, th, tr { cursor: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='32' height='32'%3E%3Cpolygon points='16,0 19,13 32,16 19,19 16,32 13,19 0,16 13,13' fill='none' stroke='%23ff1a1a' stroke-width='1.5'/%3E%3Cpolygon points='15,3 17,14 29,16 17,18 15,29 13,18 3,16 13,14' fill='%23ff1a1a' opacity='0.15'/%3E%3Ccircle cx='16' cy='16' r='3' fill='none' stroke='%23ffffff' stroke-width='0.8'/%3E%3C/svg%3E") 16 16, pointer; }
 
         .flex { display: flex; gap: 20px; align-items: center; flex-wrap: wrap; }
         pre.creds { background: #0a0a0a; padding: 15px; border-radius: 6px; border: 1px solid #1a0000; font-size: 13px; overflow-x: auto; }
@@ -151,19 +151,19 @@
             resize(); window.addEventListener('resize', resize);
 
             var particles = [];
-            var PARTICLE_COUNT = 60;
+            var PARTICLE_COUNT = 80;
             var mouse = { x: -9999, y: -9999 };
 
             for (var i = 0; i < PARTICLE_COUNT; i++) {
                 particles.push({
                     x: Math.random() * w,
                     y: Math.random() * h,
-                    vx: (Math.random() - 0.5) * 0.6,
-                    vy: (Math.random() - 0.5) * 0.6,
-                    r: Math.random() * 2 + 1.5,
-                    alpha: Math.random() * 0.5 + 0.2,
+                    vx: (Math.random() - 0.5) * 1.2,
+                    vy: (Math.random() - 0.5) * 1.2,
+                    r: Math.random() * 2.5 + 1,
+                    alpha: Math.random() * 0.4 + 0.15,
                     rot: Math.random() * Math.PI * 2,
-                    rotSpeed: (Math.random() - 0.5) * 0.02
+                    rotSpeed: (Math.random() - 0.5) * 0.04
                 });
             }
 
@@ -201,19 +201,39 @@
                     ctx.fill();
                 }
 
+                for (var i = 0; i < particles.length; i++) {
+                    for (var j = i + 1; j < particles.length; j++) {
+                        var dx = particles[i].x - particles[j].x;
+                        var dy = particles[i].y - particles[j].y;
+                        var d = Math.sqrt(dx * dx + dy * dy);
+                        if (d < 100) {
+                            ctx.beginPath();
+                            ctx.moveTo(particles[i].x, particles[i].y);
+                            ctx.lineTo(particles[j].x, particles[j].y);
+                            ctx.strokeStyle = 'rgba(204, 0, 0, ' + (0.08 * (1 - d / 100)) + ')';
+                            ctx.lineWidth = 0.5;
+                            ctx.stroke();
+                        }
+                    }
+                }
+
                 trail.push({ x: mouse.x, y: mouse.y, life: 1 });
-                for (var i = trail.length - 1; i >= 0; i--) {
-                    var t = trail[i];
-                    t.life -= 0.02;
-                    if (t.life <= 0) { trail.splice(i, 1); continue; }
-                    var ts = t.life * 4;
-                    ctx.beginPath();
-                    ctx.moveTo(t.x + ts * Math.cos(t.life * 10), t.y + ts * Math.sin(t.life * 10));
-                    ctx.lineTo(t.x + ts * Math.cos(t.life * 10 + 2.094), t.y + ts * Math.sin(t.life * 10 + 2.094));
-                    ctx.lineTo(t.x + ts * Math.cos(t.life * 10 + 4.188), t.y + ts * Math.sin(t.life * 10 + 4.188));
-                    ctx.closePath();
-                    ctx.fillStyle = 'rgba(204, 0, 0, ' + (t.life * 0.4) + ')';
-                    ctx.fill();
+                if (trail.length > 1) {
+                    for (var i = 1; i < trail.length; i++) {
+                        var t = trail[i];
+                        var p = trail[i - 1];
+                        t.life -= 0.025;
+                        if (t.life <= 0) continue;
+                        ctx.beginPath();
+                        ctx.moveTo(p.x, p.y);
+                        ctx.lineTo(t.x, t.y);
+                        ctx.strokeStyle = 'rgba(255, 26, 26, ' + (t.life * 0.6) + ')';
+                        ctx.lineWidth = t.life * 2.5;
+                        ctx.shadowBlur = 8;
+                        ctx.shadowColor = '#ff1a1a';
+                        ctx.stroke();
+                        ctx.shadowBlur = 0;
+                    }
                 }
                 if (trail.length > 30) trail.splice(0, trail.length - 30);
 
