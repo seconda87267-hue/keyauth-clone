@@ -82,3 +82,7 @@ def _run_migrations():
         "created_at": "TIMESTAMP DEFAULT CURRENT_TIMESTAMP",
         "created_by": "INTEGER DEFAULT 0",
     })
+
+    add_cols("applications", {
+        "owner_id": "INTEGER DEFAULT 1",
+    })

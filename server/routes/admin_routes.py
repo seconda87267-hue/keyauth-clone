@@ -203,7 +203,12 @@ def admin_set_hwid(request: Request, license_id: int, hwid: str = Form(...), db:
 @router.get("/applications", response_class=HTMLResponse)
 def admin_applications(request: Request, db: Session = Depends(get_db)):
     login_required(request)
-    apps = db.query(Application).order_by(desc(Application.created_at)).all()
+    is_admin = request.session.get("admin_mode") == "admin"
+    reseller_id = request.session.get("reseller_id")
+    query = db.query(Application)
+    if not is_admin and reseller_id:
+        query = query.filter(Application.owner_id == reseller_id)
+    apps = query.order_by(desc(Application.created_at)).all()
     app_data = []
     for a in apps:
         lic_count = db.query(License).filter(License.app_id == a.id).count()
@@ -219,9 +224,10 @@ def admin_create_app(request: Request, name: str = Form(...), db: Session = Depe
         return RedirectResponse(url="/admin/applications", status_code=303)
     api_key = secrets.token_hex(16).upper()
     api_secret = secrets.token_hex(32)
-    app = Application(name=name, api_key=api_key, api_secret=api_secret)
+    owner = request.session.get("reseller_id", 1)
+    app = Application(name=name, api_key=api_key, api_secret=api_secret, owner_id=owner)
     db.add(app)
-    log = Log(action="APP_CREATE", detail=f"Application '{name}' created")
+    log = Log(action="APP_CREATE", detail=f"Application '{name}' created by {request.session.get('admin_user', 'unknown')}")
     db.add(log)
     db.commit()
     return RedirectResponse(url="/admin/applications", status_code=303)
