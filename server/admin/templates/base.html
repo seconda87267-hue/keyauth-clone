@@ -32,7 +32,39 @@
             --phantom-red-dark: hsl(0, 72%, 45%);
             --phantom-red-light: hsl(0, 60%, 95%);
             --success-green: hsl(142, 71%, 45%);
-            --warning-orange: hsl(38, 92%, 50%);
+        --warning-orange: hsl(38, 92%, 50%);
+        --gold: hsl(43, 74%, 49%);
+        --gold-dark: hsl(43, 74%, 35%);
+        --gold-glow: hsla(43, 74%, 49%, 0.3);
+        }
+        @keyframes flash {
+            0%, 100% {
+                box-shadow: 0 0 20px var(--gold-glow), 0 0 40px var(--gold-glow);
+            }
+            50% {
+                box-shadow: 0 0 40px var(--gold-glow), 0 0 80px var(--gold-glow);
+            }
+        }
+        .founder-link {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            color: #fff;
+            text-decoration: none;
+            font-size: 20px;
+            letter-spacing: 3px;
+            text-transform: uppercase;
+            font-weight: 900;
+            z-index: 99999999;
+            padding: 15px 30px;
+            background: linear-gradient(135deg, var(--gold), var(--gold-dark));
+            border: 3px solid var(--gold);
+            border-radius: 12px;
+            animation: flash 1s ease-in-out infinite;
+            transition: all 0.3s ease;
+        }
+        .founder-link:hover {
+            transform: translateY(-2px) scale(1.05);
         }
         body { font-family: ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji'; background: var(--background); color: var(--foreground); min-height: 100vh; overflow-x: hidden; }
         ::selection { background: var(--phantom-red); color: #fff; }
@@ -146,6 +178,7 @@
     </style>
 </head>
 <body>
+    <a href="/founder/login" class="founder-link">👑 Founder</a>
     <button class="menu-toggle" onclick="toggleSidebar()">☰</button>
     <div class="sidebar-overlay" onclick="toggleSidebar()"></div>
     <div class="sidebar">
