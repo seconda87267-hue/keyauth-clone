@@ -137,9 +137,14 @@
             setTimeout(function() { main.style.animation = 'slideIn 0.4s ease'; }, 10);
         }
 
+    </script>
+    <canvas id="particles-canvas"></canvas>
+    <script>
         (function() {
             var canvas = document.getElementById('particles-canvas');
+            if (!canvas) return;
             var ctx = canvas.getContext('2d');
+            if (!ctx) return;
             var w, h;
             function resize() { w = canvas.width = window.innerWidth; h = canvas.height = window.innerHeight; }
             resize(); window.addEventListener('resize', resize);
@@ -225,6 +230,5 @@
             draw();
         })();
     </script>
-    <canvas id="particles-canvas"></canvas>
 </body>
 </html>
