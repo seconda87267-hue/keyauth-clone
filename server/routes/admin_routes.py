@@ -26,7 +26,8 @@ templates = Jinja2Templates(env=_jinja_env)
 
 def login_required(request: Request):
     if not request.session.get("admin_logged_in"):
-        raise HTTPException(status_code=302, detail="Not authorized")
+        return RedirectResponse(url="/admin/login", status_code=302)
+    return None
 
 
 def admin_required(request: Request):
@@ -53,6 +54,14 @@ def admin_login_post(request: Request, username: str = Form(...), password: str 
             request.session["admin_mode"] = "admin"
             request.session["admin_user"] = username
             return RedirectResponse(url="/admin/dashboard", status_code=302)
+        user = db.query(User).filter(
+            User.username == username, User.role == "admin"
+        ).first()
+        if user and user.password_hash == password:
+            request.session["admin_logged_in"] = True
+            request.session["admin_mode"] = "admin"
+            request.session["admin_user"] = user.username
+            return RedirectResponse(url="/admin/dashboard", status_code=302)
     elif mode == "reseller":
         user = db.query(User).filter(
             User.username == username, User.role == "reseller"
@@ -68,7 +77,9 @@ def admin_login_post(request: Request, username: str = Form(...), password: str 
 
 @router.get("/dashboard", response_class=HTMLResponse)
 def admin_dashboard(request: Request, db: Session = Depends(get_db)):
-    login_required(request)
+    redirect = login_required(request)
+    if redirect:
+        return redirect
     if is_reseller(request):
         return reseller_dashboard(request, db)
     total_licenses = db.query(License).count()
@@ -91,15 +102,20 @@ def admin_dashboard(request: Request, db: Session = Depends(get_db)):
 def reseller_dashboard(request: Request, db: Session = Depends(get_db)):
     reseller_id = request.session.get("reseller_id")
     my_licenses = db.query(License).filter(License.created_by == reseller_id).count()
+    keys = db.query(License).filter(License.created_by == reseller_id).order_by(desc(License.id)).limit(50).all()
     apps = db.query(Application).order_by(Application.id).all()
+    app_map = {a.id: a.name for a in apps}
+    flash = request.session.pop("flash", None)
     return templates.TemplateResponse(request, "reseller_dashboard.html", {
-        "total_keys": my_licenses, "apps": apps
+        "total_keys": my_licenses, "apps": apps, "keys": keys, "app_map": app_map, "flash": flash
     })
 
 
 @router.get("/apps", response_class=HTMLResponse)
 def reseller_apps(request: Request, db: Session = Depends(get_db)):
-    login_required(request)
+    redirect = login_required(request)
+    if redirect:
+        return redirect
     if not is_reseller(request):
         return RedirectResponse(url="/admin/applications", status_code=302)
     apps = db.query(Application).order_by(Application.id).all()
@@ -117,7 +133,9 @@ def reseller_apps(request: Request, db: Session = Depends(get_db)):
 def admin_generate(request: Request, count: int = Form(1), expiry_days: int = Form(30),
                    app_id: int = Form(0), key_type: str = Form("regular"),
                    prefix: str = Form(""), db: Session = Depends(get_db)):
-    login_required(request)
+    redirect = login_required(request)
+    if redirect:
+        return redirect
     if count < 1:
         count = 1
     if count > 100:
@@ -155,7 +173,9 @@ def admin_generate(request: Request, count: int = Form(1), expiry_days: int = Fo
 @router.get("/licenses", response_class=HTMLResponse)
 def admin_licenses(request: Request, page: int = 1, search: str = "",
                    db: Session = Depends(get_db)):
-    login_required(request)
+    redirect = login_required(request)
+    if redirect:
+        return redirect
     if is_reseller(request):
         return RedirectResponse(url="/admin/dashboard", status_code=302)
     per_page = 50
@@ -177,20 +197,29 @@ def admin_licenses(request: Request, page: int = 1, search: str = "",
 
 @router.post("/delete-license/{license_id}")
 def admin_delete_license(request: Request, license_id: int, db: Session = Depends(get_db)):
-    login_required(request)
-    if is_reseller(request):
-        return RedirectResponse(url="/admin/dashboard", status_code=302)
+    redirect = login_required(request)
+    if redirect:
+        return redirect
     lic = db.query(License).filter(License.id == license_id).first()
     if lic:
+        if is_reseller(request):
+            if lic.created_by != request.session.get("reseller_id"):
+                return RedirectResponse(url="/admin/dashboard", status_code=302)
         db.query(SessionToken).filter(SessionToken.license_id == lic.id).delete()
         db.delete(lic)
         db.commit()
+        if is_reseller(request):
+            request.session["flash"] = f"Key {lic.license_key} deleted"
+    if is_reseller(request):
+        return RedirectResponse(url="/admin/dashboard", status_code=302)
     return RedirectResponse(url="/admin/licenses", status_code=302)
 
 
 @router.post("/ban/{license_id}")
 def admin_toggle_ban(request: Request, license_id: int, db: Session = Depends(get_db)):
-    login_required(request)
+    redirect = login_required(request)
+    if redirect:
+        return redirect
     if is_reseller(request):
         return RedirectResponse(url="/admin/dashboard", status_code=302)
     lic = db.query(License).filter(License.id == license_id).first()
@@ -204,22 +233,31 @@ def admin_toggle_ban(request: Request, license_id: int, db: Session = Depends(ge
 
 @router.post("/toggle-hwid-lock/{license_id}")
 def admin_toggle_hwid_lock(request: Request, license_id: int, db: Session = Depends(get_db)):
-    login_required(request)
-    if is_reseller(request):
-        return RedirectResponse(url="/admin/dashboard", status_code=302)
+    redirect = login_required(request)
+    if redirect:
+        return redirect
     lic = db.query(License).filter(License.id == license_id).first()
     if lic:
+        if is_reseller(request):
+            if lic.created_by != request.session.get("reseller_id"):
+                return RedirectResponse(url="/admin/dashboard", status_code=302)
         lic.hwid_lock = not lic.hwid_lock
         log = Log(license_key=lic.license_key, action="HWID_LOCK_TOGGLE",
                   detail=f"HWID lock {'enabled' if lic.hwid_lock else 'disabled'}")
         db.add(log)
         db.commit()
+        if is_reseller(request):
+            request.session["flash"] = f"HWID lock {'ON' if lic.hwid_lock else 'OFF'} for {lic.license_key}"
+    if is_reseller(request):
+        return RedirectResponse(url="/admin/dashboard", status_code=302)
     return RedirectResponse(url="/admin/licenses", status_code=302)
 
 
 @router.post("/reset-hwid/{license_id}")
 def admin_reset_hwid(request: Request, license_id: int, db: Session = Depends(get_db)):
-    login_required(request)
+    redirect = login_required(request)
+    if redirect:
+        return redirect
     if is_reseller(request):
         return RedirectResponse(url="/admin/dashboard", status_code=302)
     lic = db.query(License).filter(License.id == license_id).first()
@@ -235,7 +273,9 @@ def admin_reset_hwid(request: Request, license_id: int, db: Session = Depends(ge
 
 @router.post("/set-hwid/{license_id}")
 def admin_set_hwid(request: Request, license_id: int, hwid: str = Form(...), db: Session = Depends(get_db)):
-    login_required(request)
+    redirect = login_required(request)
+    if redirect:
+        return redirect
     if is_reseller(request):
         return RedirectResponse(url="/admin/dashboard", status_code=302)
     lic = db.query(License).filter(License.id == license_id).first()
@@ -258,7 +298,9 @@ def admin_set_hwid(request: Request, license_id: int, hwid: str = Form(...), db:
 # ---------------------------------------------------------------------------
 @router.get("/applications", response_class=HTMLResponse)
 def admin_applications(request: Request, db: Session = Depends(get_db)):
-    login_required(request)
+    redirect = login_required(request)
+    if redirect:
+        return redirect
     if is_reseller(request):
         return RedirectResponse(url="/admin/dashboard", status_code=302)
     apps = db.query(Application).order_by(desc(Application.created_at)).all()
@@ -271,7 +313,9 @@ def admin_applications(request: Request, db: Session = Depends(get_db)):
 
 @router.post("/applications/create")
 def admin_create_app(request: Request, name: str = Form(...), db: Session = Depends(get_db)):
-    login_required(request)
+    redirect = login_required(request)
+    if redirect:
+        return redirect
     if is_reseller(request):
         return RedirectResponse(url="/admin/dashboard", status_code=302)
     name = name.strip()
@@ -289,7 +333,9 @@ def admin_create_app(request: Request, name: str = Form(...), db: Session = Depe
 
 @router.post("/applications/delete/{app_id}")
 def admin_delete_app(request: Request, app_id: int, db: Session = Depends(get_db)):
-    login_required(request)
+    redirect = login_required(request)
+    if redirect:
+        return redirect
     if is_reseller(request):
         return RedirectResponse(url="/admin/dashboard", status_code=302)
     app = db.query(Application).filter(Application.id == app_id).first()
@@ -304,7 +350,9 @@ def admin_delete_app(request: Request, app_id: int, db: Session = Depends(get_db
 
 @router.get("/applications/credentials/{app_id}", response_class=HTMLResponse)
 def admin_app_credentials(request: Request, app_id: int, db: Session = Depends(get_db)):
-    login_required(request)
+    redirect = login_required(request)
+    if redirect:
+        return redirect
     if is_reseller(request):
         return RedirectResponse(url="/admin/dashboard", status_code=302)
     app = db.query(Application).filter(Application.id == app_id).first()
@@ -323,7 +371,9 @@ def admin_app_credentials(request: Request, app_id: int, db: Session = Depends(g
 # ---------------------------------------------------------------------------
 @router.get("/users", response_class=HTMLResponse)
 def admin_users(request: Request, page: int = 1, db: Session = Depends(get_db)):
-    login_required(request)
+    redirect = login_required(request)
+    if redirect:
+        return redirect
     if is_reseller(request):
         return RedirectResponse(url="/admin/dashboard", status_code=302)
     per_page = 50
@@ -351,7 +401,9 @@ def admin_users(request: Request, page: int = 1, db: Session = Depends(get_db)):
 # ---------------------------------------------------------------------------
 @router.get("/logs", response_class=HTMLResponse)
 def admin_logs(request: Request, page: int = 1, db: Session = Depends(get_db)):
-    login_required(request)
+    redirect = login_required(request)
+    if redirect:
+        return redirect
     if is_reseller(request):
         return RedirectResponse(url="/admin/dashboard", status_code=302)
     per_page = 100
@@ -369,7 +421,9 @@ def admin_logs(request: Request, page: int = 1, db: Session = Depends(get_db)):
 # ---------------------------------------------------------------------------
 @router.get("/credentials", response_class=HTMLResponse)
 def admin_credentials_page(request: Request):
-    login_required(request)
+    redirect = login_required(request)
+    if redirect:
+        return redirect
     if is_reseller(request):
         return RedirectResponse(url="/admin/dashboard", status_code=302)
     from config import ADMIN_USERNAME, ADMIN_PASSWORD
@@ -380,7 +434,9 @@ def admin_credentials_page(request: Request):
 
 @router.post("/credentials", response_class=HTMLResponse)
 def admin_credentials_save(request: Request, username: str = Form(...), password: str = Form(...)):
-    login_required(request)
+    redirect = login_required(request)
+    if redirect:
+        return redirect
     if is_reseller(request):
         return RedirectResponse(url="/admin/dashboard", status_code=302)
     env_path = Path(__file__).resolve().parent.parent / ".env"
@@ -413,7 +469,9 @@ def admin_credentials_save(request: Request, username: str = Form(...), password
 # ---------------------------------------------------------------------------
 @router.get("/resellers", response_class=HTMLResponse)
 def admin_resellers(request: Request, db: Session = Depends(get_db)):
-    login_required(request)
+    redirect = login_required(request)
+    if redirect:
+        return redirect
     if is_reseller(request):
         return RedirectResponse(url="/admin/dashboard", status_code=302)
     resellers = db.query(User).filter(User.role == "reseller").order_by(desc(User.id)).all()
@@ -425,7 +483,9 @@ def admin_resellers(request: Request, db: Session = Depends(get_db)):
 @router.post("/resellers/create")
 def admin_create_reseller(request: Request, username: str = Form(...),
                           password: str = Form(...), db: Session = Depends(get_db)):
-    login_required(request)
+    redirect = login_required(request)
+    if redirect:
+        return redirect
     if is_reseller(request):
         return RedirectResponse(url="/admin/dashboard", status_code=302)
     username = username.strip()
@@ -445,7 +505,9 @@ def admin_create_reseller(request: Request, username: str = Form(...),
 @router.post("/resellers/delete/{reseller_id}")
 def admin_delete_reseller(request: Request, reseller_id: int,
                           db: Session = Depends(get_db)):
-    login_required(request)
+    redirect = login_required(request)
+    if redirect:
+        return redirect
     if is_reseller(request):
         return RedirectResponse(url="/admin/dashboard", status_code=302)
     user = db.query(User).filter(User.id == reseller_id, User.role == "reseller").first()

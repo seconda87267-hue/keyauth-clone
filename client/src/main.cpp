@@ -13,7 +13,7 @@
 
 int main(int argc, char* argv[]) {
     std::string license_key;
-    std::string server_url = "http://localhost:8000";
+    std::string server_url = "https://keyauth-clone-production-22ff.up.railway.app";
 
     if (argc < 2) {
         std::cout << "KeyAuth C++ Client\n";

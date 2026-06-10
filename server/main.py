@@ -27,7 +27,7 @@ app.mount("/static", StaticFiles(directory="static"), name="static")
 # CORS - allows your domain + localhost to access the API
 ALLOWED_ORIGINS = os.getenv(
     "ALLOWED_ORIGINS",
-    "http://localhost:8002,http://127.0.0.1:8002"
+    "http://localhost:8002,http://127.0.0.1:8002,https://keyauth-clone-production-22ff.up.railway.app"
 ).split(",")
 
 app.add_middleware(
@@ -39,7 +39,8 @@ app.add_middleware(
 )
 
 # Session middleware - set secure=True only if using HTTPS
-SESSION_SECURE = os.getenv("SESSION_SECURE", "false").lower() == "true"
+# On Railway, this is always HTTPS
+SESSION_SECURE = os.getenv("SESSION_SECURE", "true").lower() == "true"
 app.add_middleware(
     SessionMiddleware,
     secret_key=SECRET_KEY,
