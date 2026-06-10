@@ -26,7 +26,7 @@ templates = Jinja2Templates(env=_jinja_env)
 
 def login_required(request: Request):
     if not request.session.get("admin_logged_in"):
-        raise HTTPException(status_code=303, detail="Not authorized")
+        raise HTTPException(status_code=302, detail="Not authorized")
 
 
 @router.get("/login", response_class=HTMLResponse)
@@ -36,16 +36,15 @@ def admin_login_page(request: Request):
 
 @router.post("/login", response_class=HTMLResponse)
 def admin_login_post(request: Request, username: str = Form(...), password: str = Form(...),
-                     mode: str = Form("admin")):
+                     mode: str = Form("admin"), db: Session = Depends(get_db)):
     if mode == "admin":
         from config import ADMIN_USERNAME, ADMIN_PASSWORD
         if username == ADMIN_USERNAME and password == ADMIN_PASSWORD:
             request.session["admin_logged_in"] = True
             request.session["admin_mode"] = "admin"
             request.session["admin_user"] = username
-            return RedirectResponse(url="/admin/dashboard", status_code=303)
+            return RedirectResponse(url="/admin/dashboard", status_code=302)
     elif mode == "reseller":
-        db = next(get_db())
         user = db.query(User).filter(
             User.username == username, User.role == "reseller"
         ).first()
@@ -54,7 +53,7 @@ def admin_login_post(request: Request, username: str = Form(...), password: str 
             request.session["admin_mode"] = "reseller"
             request.session["admin_user"] = user.username
             request.session["reseller_id"] = user.id
-            return RedirectResponse(url="/admin/dashboard", status_code=303)
+            return RedirectResponse(url="/admin/dashboard", status_code=302)
     return templates.TemplateResponse(request, "login.html", {"error": "Invalid credentials"})
 
 
