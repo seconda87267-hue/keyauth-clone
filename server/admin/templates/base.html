@@ -22,8 +22,8 @@
         .sidebar { position: fixed; left: 0; top: 0; width: 220px; height: 100%; background: #0d0d0d; padding: 20px 0; border-right: 1px solid #1a0000; z-index: 10; transition: transform 0.3s ease; }
         .menu-toggle, .sidebar-overlay { z-index: 10; position: relative; }
         #particles-canvas { position: fixed; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 1; display: block; }
-        .sidebar h2 { color: #cc0000; padding: 0 20px 20px; border-bottom: 1px solid #1a0000; font-size: 18px; text-transform: uppercase; letter-spacing: 2px; text-shadow: 0 0 10px rgba(204,0,0,0.3); }
-        .sidebar h2::before { content: "// "; color: #660000; }
+        .sidebar h2 { color: #cc0000; padding: 0 20px 20px; border-bottom: 1px solid #1a0000; font-size: 18px; text-transform: uppercase; letter-spacing: 2px; text-shadow: 0 0 10px rgba(204,0,0,0.3); display: flex; align-items: center; gap: 10px; }
+        .sidebar .logo { width: 28px; height: 28px; border-radius: 4px; }
         .sidebar a { display: block; padding: 12px 20px; color: #888; text-decoration: none; transition: all 0.3s ease; position: relative; overflow: hidden; border-left: 3px solid transparent; }
         .sidebar a::after { content: ''; position: absolute; left: 0; bottom: 0; width: 0; height: 2px; background: #cc0000; transition: width 0.3s ease; }
         .sidebar a:hover::after { width: 100%; }
@@ -108,7 +108,7 @@
     <button class="menu-toggle" onclick="toggleSidebar()">☰</button>
     <div class="sidebar-overlay" onclick="toggleSidebar()"></div>
     <div class="sidebar">
-        <h2>KeyAuth</h2>
+        <h2><img src="/static/logo.png" class="logo" alt=""> KeyAuth</h2>
         <a href="/admin/dashboard" class="{% block dash_active %}{% endblock %}">Dashboard</a>
         <a href="/admin/applications" class="{% block app_active %}{% endblock %}">Applications</a>
         <a href="/admin/licenses" class="{% block lic_active %}{% endblock %}">Licenses</a>

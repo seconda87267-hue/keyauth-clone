@@ -3,6 +3,7 @@ import os
 from fastapi import FastAPI, Request
 from fastapi.responses import JSONResponse, RedirectResponse
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
 from starlette.middleware.sessions import SessionMiddleware
 from slowapi import _rate_limit_exceeded_handler
 from slowapi.errors import RateLimitExceeded
@@ -19,6 +20,9 @@ app = FastAPI(
     description="License Key + HWID Authentication System",
     version="1.0.0"
 )
+
+# Mount static files
+app.mount("/static", StaticFiles(directory="static"), name="static")
 
 # CORS - allows your domain + localhost to access the API
 ALLOWED_ORIGINS = os.getenv(
