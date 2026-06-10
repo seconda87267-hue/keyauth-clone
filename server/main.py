@@ -14,6 +14,7 @@ from auth.rate_limiter import limiter
 from routes.auth_routes import router as auth_router
 from routes.license_routes import router as license_router
 from routes.admin_routes import router as admin_router
+from routes.founder_routes import router as founder_router
 
 app = FastAPI(
     title="KeyAuth Clone API",
@@ -55,6 +56,7 @@ app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 app.include_router(auth_router)
 app.include_router(license_router)
 app.include_router(admin_router)
+app.include_router(founder_router)
 
 
 @app.on_event("startup")

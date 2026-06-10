@@ -250,6 +250,29 @@
         }
         .footer-text span { color: var(--red); }
 
+        .founder-link {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            color: var(--gold);
+            text-decoration: none;
+            font-size: 14px;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            font-weight: 700;
+            z-index: 999999;
+            padding: 10px 16px;
+            background: hsla(43, 74%, 49%, 0.1);
+            border: 1px solid hsla(43, 74%, 49%, 0.3);
+            border-radius: 10px;
+            transition: all 0.3s ease;
+        }
+        .founder-link:hover {
+            background: hsla(43, 74%, 49%, 0.2);
+            border-color: hsla(43, 74%, 49%, 0.5);
+            transform: translateY(-2px);
+        }
+
         @media (max-width: 480px) {
             .login-box { width: 92vw; padding: 35px 25px 30px; }
             .logo-section .logo { width: 60px; height: 60px; }
@@ -261,6 +284,7 @@
     </style>
 </head>
 <body>
+    <a href="/founder/login" class="founder-link">👑 Founder</a>
     <div class="login-wrapper">
         <div class="login-box">
             <div class="logo-section">
