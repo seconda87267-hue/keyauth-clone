@@ -156,7 +156,9 @@
                     vx: (Math.random() - 0.5) * 0.6,
                     vy: (Math.random() - 0.5) * 0.6,
                     r: Math.random() * 2 + 1.5,
-                    alpha: Math.random() * 0.5 + 0.2
+                    alpha: Math.random() * 0.5 + 0.2,
+                    rot: Math.random() * Math.PI * 2,
+                    rotSpeed: (Math.random() - 0.5) * 0.02
                 });
             }
 
@@ -173,6 +175,8 @@
                     if (p.y < 0) p.y = h;
                     if (p.y > h) p.y = 0;
 
+                    p.rot += p.rotSpeed;
+
                     var dx = mouse.x - p.x;
                     var dy = mouse.y - p.y;
                     var dist = Math.sqrt(dx * dx + dy * dy);
@@ -182,8 +186,12 @@
                         p.y -= dy / dist * force;
                     }
 
+                    var s = p.r * 2.5;
                     ctx.beginPath();
-                    ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+                    ctx.moveTo(p.x + s * Math.cos(p.rot), p.y + s * Math.sin(p.rot));
+                    ctx.lineTo(p.x + s * Math.cos(p.rot + 2.094), p.y + s * Math.sin(p.rot + 2.094));
+                    ctx.lineTo(p.x + s * Math.cos(p.rot + 4.188), p.y + s * Math.sin(p.rot + 4.188));
+                    ctx.closePath();
                     ctx.fillStyle = 'rgba(204, 0, 0, ' + p.alpha + ')';
                     ctx.fill();
                 }
@@ -193,9 +201,13 @@
                     var t = trail[i];
                     t.life -= 0.02;
                     if (t.life <= 0) { trail.splice(i, 1); continue; }
+                    var ts = t.life * 4;
                     ctx.beginPath();
-                    ctx.arc(t.x, t.y, t.life * 3, 0, Math.PI * 2);
-                    ctx.fillStyle = 'rgba(204, 0, 0, ' + (t.life * 0.5) + ')';
+                    ctx.moveTo(t.x + ts * Math.cos(t.life * 10), t.y + ts * Math.sin(t.life * 10));
+                    ctx.lineTo(t.x + ts * Math.cos(t.life * 10 + 2.094), t.y + ts * Math.sin(t.life * 10 + 2.094));
+                    ctx.lineTo(t.x + ts * Math.cos(t.life * 10 + 4.188), t.y + ts * Math.sin(t.life * 10 + 4.188));
+                    ctx.closePath();
+                    ctx.fillStyle = 'rgba(204, 0, 0, ' + (t.life * 0.4) + ')';
                     ctx.fill();
                 }
                 if (trail.length > 30) trail.splice(0, trail.length - 30);
