@@ -31,6 +31,7 @@ class License(Base):
     created_at = Column(DateTime, server_default=func.now())
     last_login = Column(DateTime, nullable=True)
     note = Column(Text, nullable=True)
+    created_by = Column(Integer, nullable=True)
 
 
 class SessionToken(Base):

@@ -76,6 +76,7 @@ def _run_migrations():
         "hwid_bind_date": "TIMESTAMP",
         "ip_address": "VARCHAR(45)",
         "hwid_lock": "INTEGER DEFAULT 1" if dialect == "sqlite" else "BOOLEAN DEFAULT TRUE",
+        "created_by": "INTEGER",
     })
 
     add_cols("users", {

@@ -157,11 +157,11 @@
             {% if _mode == 'reseller' %}Reseller{% else %}Admin{% endif %}
         </div>
         <a href="/admin/dashboard" class="{% block dash_active %}{% endblock %}">Dashboard</a>
+        {% if _mode == 'admin' %}
         <a href="/admin/applications" class="{% block app_active %}{% endblock %}">Applications</a>
         <a href="/admin/licenses" class="{% block lic_active %}{% endblock %}">Licenses</a>
         <a href="/admin/logs" class="{% block logs_active %}{% endblock %}">Logs</a>
         <a href="/admin/users" class="{% block users_active %}{% endblock %}">Users</a>
-        {% if _mode == 'admin' %}
         <a href="/admin/resellers" class="{% block reseller_active %}{% endblock %}">Resellers</a>
         {% endif %}
         <div class="logout">
