@@ -69,4 +69,6 @@ class User(Base):
     id = Column(Integer, primary_key=True, autoincrement=True)
     username = Column(String(64), unique=True, nullable=False)
     password_hash = Column(String(256), nullable=False)
-    role = Column(String(32), default="admin")
+    role = Column(String(32), default="reseller")
+    created_at = Column(DateTime, server_default=func.now())
+    created_by = Column(Integer, nullable=True)

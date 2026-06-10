@@ -8,52 +8,338 @@
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         :root {
-            --background: hsl(0, 0%, 7%);
-            --foreground: hsl(0, 0%, 98%);
-            --card: hsl(0, 0%, 7%);
-            --primary: hsl(0, 72%, 51%);
-            --primary-dark: hsl(0, 72%, 45%);
-            --muted-foreground: hsl(0, 0%, 63%);
-            --border: hsl(0, 0%, 14%);
-            --radius: 0.5rem;
-            --phantom-red: hsl(0, 72%, 51%);
+            --bg: hsl(0, 0%, 3%);
+            --surface: hsl(0, 0%, 6%);
+            --surface-hover: hsl(0, 0%, 10%);
+            --border: hsla(0, 0%, 100%, 0.06);
+            --border-focus: hsla(0, 72%, 51%, 0.5);
+            --text: hsl(0, 0%, 96%);
+            --text-muted: hsl(0, 0%, 45%);
+            --gold: hsl(43, 74%, 49%);
+            --gold-dark: hsl(43, 74%, 35%);
+            --gold-glow: hsla(43, 74%, 49%, 0.3);
+            --red: hsl(0, 72%, 51%);
+            --red-glow: hsla(0, 72%, 51%, 0.25);
+            --radius: 10px;
         }
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(-20px); } to { opacity: 1; transform: translateY(0); } }
-        @keyframes pulseGlow { 0%, 100% { box-shadow: 0 0 20px rgba(220,38,38,0.3); } 50% { box-shadow: 0 0 40px rgba(220,38,38,0.6), 0 0 60px rgba(220,38,38,0.3); } }
-        body { font-family: ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji'; background: var(--background); color: var(--foreground); display: flex; align-items: center; justify-content: center; min-height: 100vh; overflow: hidden; }
-        .login-box { background: var(--card); padding: 40px; border-radius: 12px; border: 1px solid var(--border); width: 360px; animation: fadeIn 0.6s ease; transition: border-color 0.3s ease; }
-        .login-box:hover { border-color: rgba(255,255,255,0.1); }
-        .login-box h1 { color: var(--primary); text-align: center; margin-bottom: 30px; text-transform: uppercase; letter-spacing: 3px; display: flex; align-items: center; justify-content: center; gap: 12px; }
-        .login-box .logo { width: 64px; height: 64px; border-radius: var(--radius); }
-        .form-group { margin-bottom: 20px; }
-        .form-group label { display: block; color: var(--muted-foreground); margin-bottom: 6px; font-size: 12px; text-transform: uppercase; letter-spacing: 1px; }
-        .form-group input { width: 100%; padding: 10px 14px; background: rgba(0,0,0,0.3); border: 1px solid var(--border); border-radius: var(--radius); color: var(--foreground); font-size: 14px; transition: all 0.2s ease; }
-        .form-group input:focus { outline: none; border-color: rgba(220,38,38,0.5); box-shadow: 0 0 0 2px rgba(220,38,38,0.1); }
-        .btn { width: 100%; padding: 12px; background: var(--primary); color: #fff; border: none; border-radius: var(--radius); font-size: 14px; cursor: pointer; text-transform: uppercase; letter-spacing: 2px; transition: all 0.2s ease; animation: pulseGlow 2s infinite; }
-        .btn:hover { background: var(--primary-dark); transform: translateY(-2px); box-shadow: 0 8px 25px rgba(220,38,38,0.4); }
-        .error { color: #f87171; text-align: center; margin-bottom: 15px; font-size: 14px; }
-        ::-webkit-scrollbar { width: 10px; }
-        ::-webkit-scrollbar-track { background: rgba(255,255,255,0.04); }
-        ::-webkit-scrollbar-thumb { background: rgba(220,38,38,0.35); border-radius: 10px; border: 2px solid rgba(0,0,0,0.6); }
+        @keyframes fadeUp { from { opacity: 0; transform: translateY(30px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-8px); } }
+        @keyframes shine { 0% { background-position: -200% center; } 100% { background-position: 200% center; } }
+        @keyframes pulseGlow { 0%, 100% { box-shadow: 0 0 30px var(--red-glow), 0 0 60px transparent; } 50% { box-shadow: 0 0 50px var(--red-glow), 0 0 80px hsla(0, 72%, 51%, 0.1); } }
+        @keyframes slideBar { 0% { left: 4px; } 100% { left: calc(50% + 4px); } }
+        @keyframes slideBarBack { 0% { left: calc(50% + 4px); } 100% { left: 4px; } }
+
+        body {
+            font-family: 'Inter', ui-sans-serif, system-ui, sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            overflow: hidden;
+            position: relative;
+        }
+        body::before {
+            content: '';
+            position: fixed;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background:
+                radial-gradient(ellipse at 20% 50%, hsla(0, 72%, 51%, 0.03) 0%, transparent 50%),
+                radial-gradient(ellipse at 80% 50%, hsla(43, 74%, 49%, 0.02) 0%, transparent 50%),
+                radial-gradient(ellipse at 50% 0%, hsla(0, 0%, 100%, 0.02) 0%, transparent 30%);
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        .login-wrapper {
+            position: relative;
+            z-index: 1;
+            animation: fadeUp 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        .login-box {
+            background: var(--surface);
+            padding: 50px 40px 40px;
+            border-radius: 16px;
+            border: 1px solid var(--border);
+            width: 400px;
+            position: relative;
+            overflow: hidden;
+        }
+        .login-box::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 1px;
+            background: linear-gradient(90deg, transparent, hsla(43, 74%, 49%, 0.4), hsla(0, 72%, 51%, 0.4), transparent);
+        }
+
+        .logo-section {
+            text-align: center;
+            margin-bottom: 35px;
+        }
+        .logo-section .logo {
+            width: 72px;
+            height: 72px;
+            border-radius: 16px;
+            margin-bottom: 15px;
+            animation: float 5s ease-in-out infinite;
+        }
+        .logo-section h1 {
+            font-size: 20px;
+            font-weight: 700;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            background: linear-gradient(135deg, var(--red), hsl(43, 74%, 49%));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        .logo-section p {
+            color: var(--text-muted);
+            font-size: 13px;
+            margin-top: 6px;
+            letter-spacing: 0.5px;
+        }
+
+        .mode-toggle {
+            display: flex;
+            background: hsla(0, 0%, 100%, 0.04);
+            border-radius: 8px;
+            padding: 4px;
+            margin-bottom: 25px;
+            position: relative;
+            border: 1px solid var(--border);
+        }
+        .mode-toggle .slider {
+            position: absolute;
+            top: 4px;
+            left: 4px;
+            width: calc(50% - 4px);
+            height: calc(100% - 8px);
+            background: linear-gradient(135deg, hsla(0, 72%, 51%, 0.2), hsla(43, 74%, 49%, 0.1));
+            border-radius: 6px;
+            border: 1px solid hsla(0, 72%, 51%, 0.2);
+            transition: left 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+            z-index: 0;
+        }
+        .mode-toggle .slider.right { left: calc(50% + 2px); }
+        .mode-option {
+            flex: 1;
+            padding: 10px 16px;
+            text-align: center;
+            font-size: 13px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            cursor: pointer;
+            border: none;
+            background: none;
+            color: var(--text-muted);
+            transition: color 0.3s ease;
+            position: relative;
+            z-index: 1;
+            border-radius: 6px;
+        }
+        .mode-option.active { color: var(--text); }
+        .mode-option:first-child.active { color: var(--red); }
+        .mode-option:last-child.active { color: var(--gold); }
+
+        .mode-icon { font-size: 16px; margin-right: 6px; }
+
+        .form-group {
+            margin-bottom: 18px;
+        }
+        .form-group label {
+            display: block;
+            color: var(--text-muted);
+            margin-bottom: 7px;
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            font-weight: 600;
+        }
+        .form-group input {
+            width: 100%;
+            padding: 13px 16px;
+            background: hsla(0, 0%, 0%, 0.4);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            color: var(--text);
+            font-size: 14px;
+            transition: all 0.25s ease;
+            font-family: inherit;
+        }
+        .form-group input:focus {
+            outline: none;
+            border-color: var(--border-focus);
+            box-shadow: 0 0 0 3px hsla(0, 72%, 51%, 0.08);
+            background: hsla(0, 0%, 0%, 0.6);
+        }
+        .form-group input::placeholder { color: hsla(0, 0%, 100%, 0.15); }
+        .form-group input:-webkit-autofill { -webkit-box-shadow: 0 0 0 30px var(--surface) inset !important; -webkit-text-fill-color: var(--text) !important; }
+
+        .btn-login {
+            width: 100%;
+            padding: 14px;
+            border: none;
+            border-radius: var(--radius);
+            font-size: 14px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+            color: #fff;
+            margin-top: 5px;
+        }
+        .btn-login.admin-mode {
+            background: linear-gradient(135deg, var(--red), hsl(0, 65%, 40%));
+        }
+        .btn-login.admin-mode:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 30px hsla(0, 72%, 51%, 0.35);
+        }
+        .btn-login.reseller-mode {
+            background: linear-gradient(135deg, var(--gold-dark), hsl(43, 65%, 35%));
+        }
+        .btn-login.reseller-mode:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 30px hsla(43, 74%, 49%, 0.3);
+        }
+        .btn-login:active { transform: translateY(0) scale(0.99); }
+
+        .btn-login .btn-shine {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, hsla(0, 0%, 100%, 0.1), transparent);
+            background-size: 200% 100%;
+            animation: shine 3s ease-in-out infinite;
+            pointer-events: none;
+        }
+
+        .error {
+            background: hsla(0, 72%, 51%, 0.1);
+            border: 1px solid hsla(0, 72%, 51%, 0.25);
+            border-radius: var(--radius);
+            padding: 12px 16px;
+            margin-bottom: 18px;
+            color: #f87171;
+            font-size: 13px;
+            text-align: center;
+            animation: fadeUp 0.3s ease;
+        }
+
+        .footer-text {
+            text-align: center;
+            margin-top: 20px;
+            color: hsla(0, 0%, 100%, 0.12);
+            font-size: 11px;
+            letter-spacing: 0.5px;
+        }
+        .footer-text span { color: var(--red); }
+
+        @media (max-width: 480px) {
+            .login-box { width: 92vw; padding: 35px 25px 30px; }
+            .logo-section .logo { width: 60px; height: 60px; }
+        }
+
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: hsla(0, 72%, 51%, 0.2); border-radius: 4px; }
     </style>
 </head>
 <body>
-    <div class="login-box">
-        <h1><img src="/static/logo.png" class="logo" alt=""> Admin Login</h1>
-        {% if error %}
-        <div class="error">{{ error }}</div>
-        {% endif %}
-        <form method="post">
-            <div class="form-group">
-                <label>Username</label>
-                <input type="text" name="username" required>
+    <div class="login-wrapper">
+        <div class="login-box">
+            <div class="logo-section">
+                <img src="/static/logo.png" class="logo" alt="">
+                <h1>KeyAuth Panel</h1>
+                <p>Enterprise Authentication System</p>
             </div>
-            <div class="form-group">
-                <label>Password</label>
-                <input type="password" name="password" required>
+
+            {% if error %}
+            <div class="error">{{ error }}</div>
+            {% endif %}
+
+            <form method="post" id="loginForm">
+                <div class="mode-toggle" id="modeToggle">
+                    <div class="slider" id="modeSlider"></div>
+                    <button type="button" class="mode-option active" data-mode="admin" onclick="setMode('admin')">
+                        <span class="mode-icon">&#9813;</span> Admin
+                    </button>
+                    <button type="button" class="mode-option" data-mode="reseller" onclick="setMode('reseller')">
+                        <span class="mode-icon">&#9733;</span> Reseller
+                    </button>
+                </div>
+                <input type="hidden" name="mode" id="modeInput" value="admin">
+
+                <div class="form-group">
+                    <label id="userLabel">ADMIN USERNAME</label>
+                    <input type="text" name="username" id="usernameInput" placeholder="Enter username" required autocomplete="username">
+                </div>
+                <div class="form-group">
+                    <label id="passLabel">PASSWORD</label>
+                    <input type="password" name="password" id="passwordInput" placeholder="Enter password" required autocomplete="current-password">
+                </div>
+
+                <button type="submit" class="btn-login admin-mode" id="loginBtn">
+                    <span class="btn-shine"></span>
+                    <span id="btnText">Sign In as Admin</span>
+                </button>
+            </form>
+
+            <div class="footer-text">
+                <span>&#9829;</span> secure authentication
             </div>
-            <button type="submit" class="btn">Sign In</button>
-        </form>
+        </div>
     </div>
+
+    <script>
+        var currentMode = 'admin';
+
+        function setMode(mode) {
+            currentMode = mode;
+            document.getElementById('modeInput').value = mode;
+            document.getElementById('modeSlider').className = 'slider' + (mode === 'reseller' ? ' right' : '');
+
+            var options = document.querySelectorAll('.mode-option');
+            options.forEach(function(opt) {
+                opt.classList.toggle('active', opt.dataset.mode === mode);
+            });
+
+            var btn = document.getElementById('loginBtn');
+            var btnText = document.getElementById('btnText');
+            var userLabel = document.getElementById('userLabel');
+            var passLabel = document.getElementById('passLabel');
+            var userInput = document.getElementById('usernameInput');
+            var passInput = document.getElementById('passwordInput');
+
+            if (mode === 'admin') {
+                btn.className = 'btn-login admin-mode';
+                btnText.textContent = 'Sign In as Admin';
+                userLabel.textContent = 'ADMIN USERNAME';
+                passLabel.textContent = 'PASSWORD';
+                userInput.placeholder = 'Enter admin username';
+            } else {
+                btn.className = 'btn-login reseller-mode';
+                btnText.textContent = '&#9733; Sign In as Reseller';
+                userLabel.textContent = 'RESELLER ID';
+                passLabel.textContent = 'RESELLER PASSWORD';
+                userInput.placeholder = 'Enter reseller ID';
+            }
+        }
+    </script>
 </body>
 </html>

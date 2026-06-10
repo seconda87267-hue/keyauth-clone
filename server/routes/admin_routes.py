@@ -11,7 +11,7 @@ import hashlib
 import jinja2
 
 from database.database import get_db
-from database.models import License, Log, SessionToken, Application
+from database.models import License, Log, SessionToken, Application, User
 from auth.rate_limiter import limiter
 
 router = APIRouter(prefix="/admin", tags=["admin"])
@@ -35,11 +35,26 @@ def admin_login_page(request: Request):
 
 
 @router.post("/login", response_class=HTMLResponse)
-def admin_login_post(request: Request, username: str = Form(...), password: str = Form(...)):
-    from config import ADMIN_USERNAME, ADMIN_PASSWORD
-    if username == ADMIN_USERNAME and password == ADMIN_PASSWORD:
-        request.session["admin_logged_in"] = True
-        return RedirectResponse(url="/admin/dashboard", status_code=303)
+def admin_login_post(request: Request, username: str = Form(...), password: str = Form(...),
+                     mode: str = Form("admin")):
+    if mode == "admin":
+        from config import ADMIN_USERNAME, ADMIN_PASSWORD
+        if username == ADMIN_USERNAME and password == ADMIN_PASSWORD:
+            request.session["admin_logged_in"] = True
+            request.session["admin_mode"] = "admin"
+            request.session["admin_user"] = username
+            return RedirectResponse(url="/admin/dashboard", status_code=303)
+    elif mode == "reseller":
+        db = next(get_db())
+        user = db.query(User).filter(
+            User.username == username, User.role == "reseller"
+        ).first()
+        if user and user.password_hash == password:
+            request.session["admin_logged_in"] = True
+            request.session["admin_mode"] = "reseller"
+            request.session["admin_user"] = user.username
+            request.session["reseller_id"] = user.id
+            return RedirectResponse(url="/admin/dashboard", status_code=303)
     return templates.TemplateResponse(request, "login.html", {"error": "Invalid credentials"})
 
 
@@ -322,6 +337,52 @@ def admin_credentials_save(request: Request, username: str = Form(...), password
     return templates.TemplateResponse(request, "credentials_admin.html", {
         "admin_user": username, "admin_pass": password, "saved": True
     })
+
+
+@router.get("/resellers", response_class=HTMLResponse)
+def admin_resellers(request: Request, db: Session = Depends(get_db)):
+    login_required(request)
+    if request.session.get("admin_mode") != "admin":
+        return RedirectResponse(url="/admin/dashboard", status_code=303)
+    resellers = db.query(User).filter(User.role == "reseller").order_by(desc(User.id)).all()
+    error = request.session.pop("reseller_error", None)
+    return templates.TemplateResponse(request, "resellers.html",
+                                       {"resellers": resellers, "error": error})
+
+
+@router.post("/resellers/create")
+def admin_create_reseller(request: Request, username: str = Form(...),
+                          password: str = Form(...), db: Session = Depends(get_db)):
+    login_required(request)
+    if request.session.get("admin_mode") != "admin":
+        return RedirectResponse(url="/admin/dashboard", status_code=303)
+    username = username.strip()
+    if not username or not password:
+        request.session["reseller_error"] = "Username and password required"
+        return RedirectResponse(url="/admin/resellers", status_code=303)
+    existing = db.query(User).filter(User.username == username).first()
+    if existing:
+        request.session["reseller_error"] = f"Username '{username}' already exists"
+        return RedirectResponse(url="/admin/resellers", status_code=303)
+    admin_id = request.session.get("reseller_id", 0)
+    user = User(username=username, password_hash=password, role="reseller",
+                created_by=admin_id)
+    db.add(user)
+    db.commit()
+    return RedirectResponse(url="/admin/resellers", status_code=303)
+
+
+@router.post("/resellers/delete/{reseller_id}")
+def admin_delete_reseller(request: Request, reseller_id: int,
+                          db: Session = Depends(get_db)):
+    login_required(request)
+    if request.session.get("admin_mode") != "admin":
+        return RedirectResponse(url="/admin/dashboard", status_code=303)
+    user = db.query(User).filter(User.id == reseller_id, User.role == "reseller").first()
+    if user:
+        db.delete(user)
+        db.commit()
+    return RedirectResponse(url="/admin/resellers", status_code=303)
 
 
 @router.get("/logout")

@@ -126,6 +126,13 @@
         .hwid-cell { cursor: pointer; color: #60a5fa; transition: color 0.2s ease; }
         .hwid-cell:hover { color: #93c5fd; text-decoration: underline; }
 
+        .mode-badge { display: flex; align-items: center; gap: 8px; padding: 10px 20px; margin: 8px 12px; border-radius: calc(var(--radius) - 2px); font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 1.5px; }
+        .mode-badge.admin { background: rgba(220,38,38,0.12); color: #f87171; border: 1px solid rgba(220,38,38,0.2); }
+        .mode-badge.reseller { background: rgba(250,204,21,0.1); color: #facc15; border: 1px solid rgba(250,204,21,0.2); }
+        .mode-badge .dot { width: 6px; height: 6px; border-radius: 50%; display: inline-block; }
+        .mode-badge.admin .dot { background: #f87171; box-shadow: 0 0 6px rgba(248,113,113,0.5); }
+        .mode-badge.reseller .dot { background: #facc15; box-shadow: 0 0 6px rgba(250,204,21,0.5); }
+
         @media (max-width: 768px) {
             .sidebar { transform: translateX(-100%); width: 200px; }
             .sidebar.open { transform: translateX(0); }
@@ -143,12 +150,22 @@
     <div class="sidebar-overlay" onclick="toggleSidebar()"></div>
     <div class="sidebar">
         <h2><img src="/static/logo.png" class="logo" alt=""> KeyAuth</h2>
+        <div class="mode-badge {% if session.get('admin_mode') == 'reseller' %}reseller{% else %}admin{% endif %}">
+            <span class="dot"></span>
+            {% if session.get('admin_mode') == 'reseller' %}Reseller{% else %}Admin{% endif %}
+        </div>
         <a href="/admin/dashboard" class="{% block dash_active %}{% endblock %}">Dashboard</a>
         <a href="/admin/applications" class="{% block app_active %}{% endblock %}">Applications</a>
         <a href="/admin/licenses" class="{% block lic_active %}{% endblock %}">Licenses</a>
         <a href="/admin/logs" class="{% block logs_active %}{% endblock %}">Logs</a>
         <a href="/admin/users" class="{% block users_active %}{% endblock %}">Users</a>
+        {% if session.get('admin_mode') == 'admin' %}
+        <a href="/admin/resellers" class="{% block reseller_active %}{% endblock %}">Resellers</a>
+        {% endif %}
         <div class="logout">
+            <div style="font-size:11px;color:var(--muted-foreground);margin-bottom:8px;padding:0 20px;">
+                {{ session.get('admin_user', '') }}
+            </div>
             <a href="/admin/logout">Logout</a>
         </div>
     </div>
