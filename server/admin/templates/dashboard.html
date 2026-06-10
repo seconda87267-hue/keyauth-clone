@@ -80,7 +80,7 @@
                 <td class="mono">{{ log.ip_address or '-' }}</td>
             </tr>
             {% else %}
-            <tr><td colspan="5" style="text-align: center; color: #666;">No logs yet</td></tr>
+            <tr><td colspan="5" style="text-align: center; color: var(--muted-foreground);">No logs yet</td></tr>
             {% endfor %}
         </tbody>
     </table>

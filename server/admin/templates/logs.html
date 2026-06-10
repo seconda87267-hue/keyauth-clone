@@ -34,7 +34,7 @@
                 <td class="mono">{{ log.ip_address or '-' }}</td>
             </tr>
             {% else %}
-            <tr><td colspan="6" style="text-align: center; color: #666;">No logs found</td></tr>
+            <tr><td colspan="6" style="text-align: center; color: var(--muted-foreground);">No logs found</td></tr>
             {% endfor %}
         </tbody>
     </table>
@@ -45,7 +45,7 @@
     {% if page > 1 %}
     <a href="/admin/logs?page={{ page - 1 }}">← Prev</a>
     {% endif %}
-    <span style="padding:6px 12px;color:#888;">Page {{ page }} of {{ total_pages }}</span>
+    <span style="padding:6px 12px;color:var(--muted-foreground);">Page {{ page }} of {{ total_pages }}</span>
     {% if page < total_pages %}
     <a href="/admin/logs?page={{ page + 1 }}">Next →</a>
     {% endif %}

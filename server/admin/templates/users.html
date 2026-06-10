@@ -3,7 +3,7 @@
 {% block users_active %}active{% endblock %}
 {% block content %}
 <h1 style="margin-bottom:25px;">Users</h1>
-<p style="color:#888;margin-bottom:20px;">After someone registers for your app with a license, they will appear here.</p>
+<p style="color:var(--muted-foreground);margin-bottom:20px;">After someone registers for your app with a license, they will appear here.</p>
 
 <div class="card">
     <table>
@@ -62,7 +62,7 @@
                 </td>
             </tr>
             {% else %}
-            <tr><td colspan="12" style="text-align:center;color:#666;padding:30px;">No users yet. Log in with a license to see them here.</td></tr>
+            <tr><td colspan="12" style="text-align:center;color:var(--muted-foreground);padding:30px;">No users yet. Log in with a license to see them here.</td></tr>
             {% endfor %}
         </tbody>
     </table>
@@ -71,7 +71,7 @@
 {% if total_pages > 1 %}
 <div class="pagination">
     {% if page > 1 %}<a href="/admin/users?page={{ page - 1 }}">&laquo; Prev</a>{% endif %}
-    <span style="color:#888;padding:6px 12px;">Page {{ page }} / {{ total_pages }}</span>
+    <span style="color:var(--muted-foreground);padding:6px 12px;">Page {{ page }} / {{ total_pages }}</span>
     {% if page < total_pages %}<a href="/admin/users?page={{ page + 1 }}">Next &raquo;</a>{% endif %}
 </div>
 {% endif %}
