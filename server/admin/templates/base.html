@@ -6,7 +6,7 @@
     <title>KeyAuth Admin - {% block title %}Dashboard{% endblock %}</title>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
-        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #0a0a0a; color: #e0e0e0; min-height: 100vh; overflow-x: hidden; }
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #0a0a0a; color: #e0e0e0; min-height: 100vh; overflow-x: hidden; cursor: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="24" height="28"><circle cx="6" cy="6" r="5" fill="%23cc0000" opacity="0.8"/><circle cx="18" cy="18" r="4" fill="%23ff1a1a" opacity="0.6"/></svg>') 6 6, auto; }
         ::-webkit-scrollbar { width: 6px; }
         ::-webkit-scrollbar-track { background: #0a0a0a; }
         ::-webkit-scrollbar-thumb { background: #cc0000; border-radius: 3px; }
@@ -20,6 +20,8 @@
         @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
 
         .sidebar { position: fixed; left: 0; top: 0; width: 220px; height: 100%; background: #0d0d0d; padding: 20px 0; border-right: 1px solid #1a0000; z-index: 10; transition: transform 0.3s ease; }
+        .sidebar, .main, .menu-toggle, .sidebar-overlay { z-index: 10; position: relative; }
+        #particles-canvas { position: fixed; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 1; }
         .sidebar h2 { color: #cc0000; padding: 0 20px 20px; border-bottom: 1px solid #1a0000; font-size: 18px; text-transform: uppercase; letter-spacing: 2px; text-shadow: 0 0 10px rgba(204,0,0,0.3); }
         .sidebar h2::before { content: "// "; color: #660000; }
         .sidebar a { display: block; padding: 12px 20px; color: #888; text-decoration: none; transition: all 0.3s ease; position: relative; overflow: hidden; border-left: 3px solid transparent; }
@@ -81,6 +83,9 @@
         .logout { margin-top: 30px; padding: 12px 20px; border-top: 1px solid #1a0000; }
         .logout a { color: #8b0000 !important; }
         .logout a:hover { color: #cc0000 !important; }
+
+        a, button, .btn, .copy-btn, input, select, .badge, th, tr { cursor: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="28" height="28"><circle cx="12" cy="12" r="7" fill="%23ff1a1a" opacity="0.9"/><circle cx="14" cy="14" r="3" fill="%23ffffff" opacity="0.7"/></svg>') 12 12, pointer; }
+
         .flex { display: flex; gap: 20px; align-items: center; flex-wrap: wrap; }
         pre.creds { background: #0a0a0a; padding: 15px; border-radius: 6px; border: 1px solid #1a0000; font-size: 13px; overflow-x: auto; }
         .copy-btn { cursor: pointer; margin-left: 8px; padding: 2px 8px; background: #1a0000; border: none; border-radius: 3px; color: #cc0000; font-size: 11px; transition: all 0.3s ease; }
@@ -112,6 +117,7 @@
             <a href="/admin/logout">Logout</a>
         </div>
     </div>
+    <canvas id="particles-canvas"></canvas>
     <div class="main" id="mainContent">
         {% block content %}{% endblock %}
     </div>
@@ -130,6 +136,82 @@
             main.style.animation = 'none';
             setTimeout(function() { main.style.animation = 'slideIn 0.4s ease'; }, 10);
         }
+
+        (function() {
+            var canvas = document.getElementById('particles-canvas');
+            var ctx = canvas.getContext('2d');
+            var w, h;
+            function resize() { w = canvas.width = window.innerWidth; h = canvas.height = window.innerHeight; }
+            resize(); window.addEventListener('resize', resize);
+
+            var particles = [];
+            var PARTICLE_COUNT = 60;
+            var mouse = { x: -9999, y: -9999 };
+
+            for (var i = 0; i < PARTICLE_COUNT; i++) {
+                particles.push({
+                    x: Math.random() * w,
+                    y: Math.random() * h,
+                    vx: (Math.random() - 0.5) * 0.6,
+                    vy: (Math.random() - 0.5) * 0.6,
+                    r: Math.random() * 2 + 1.5,
+                    alpha: Math.random() * 0.5 + 0.2
+                });
+            }
+
+            var trail = [];
+            function draw() {
+                ctx.clearRect(0, 0, w, h);
+
+                for (var i = 0; i < particles.length; i++) {
+                    var p = particles[i];
+                    p.x += p.vx;
+                    p.y += p.vy;
+                    if (p.x < 0) p.x = w;
+                    if (p.x > w) p.x = 0;
+                    if (p.y < 0) p.y = h;
+                    if (p.y > h) p.y = 0;
+
+                    var dx = mouse.x - p.x;
+                    var dy = mouse.y - p.y;
+                    var dist = Math.sqrt(dx * dx + dy * dy);
+                    if (dist < 120) {
+                        var force = (120 - dist) / 120 * 0.5;
+                        p.x -= dx / dist * force;
+                        p.y -= dy / dist * force;
+                    }
+
+                    ctx.beginPath();
+                    ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+                    ctx.fillStyle = 'rgba(204, 0, 0, ' + p.alpha + ')';
+                    ctx.fill();
+                }
+
+                trail.push({ x: mouse.x, y: mouse.y, life: 1 });
+                for (var i = trail.length - 1; i >= 0; i--) {
+                    var t = trail[i];
+                    t.life -= 0.02;
+                    if (t.life <= 0) { trail.splice(i, 1); continue; }
+                    ctx.beginPath();
+                    ctx.arc(t.x, t.y, t.life * 3, 0, Math.PI * 2);
+                    ctx.fillStyle = 'rgba(204, 0, 0, ' + (t.life * 0.5) + ')';
+                    ctx.fill();
+                }
+                if (trail.length > 30) trail.splice(0, trail.length - 30);
+
+                requestAnimationFrame(draw);
+            }
+
+            document.addEventListener('mousemove', function(e) {
+                mouse.x = e.clientX;
+                mouse.y = e.clientY;
+            });
+            document.addEventListener('mouseleave', function() {
+                mouse.x = -9999; mouse.y = -9999;
+            });
+
+            draw();
+        })();
     </script>
 </body>
 </html>
