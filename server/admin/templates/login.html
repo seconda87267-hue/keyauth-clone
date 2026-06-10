@@ -250,27 +250,34 @@
         }
         .footer-text span { color: var(--red); }
 
+        @keyframes flash {
+            0%, 100% {
+                box-shadow: 0 0 20px var(--gold-glow), 0 0 40px var(--gold-glow);
+            }
+            50% {
+                box-shadow: 0 0 40px var(--gold-glow), 0 0 80px var(--gold-glow);
+            }
+        }
         .founder-link {
             position: fixed;
             top: 20px;
             right: 20px;
-            color: var(--gold);
+            color: #fff;
             text-decoration: none;
-            font-size: 14px;
-            letter-spacing: 2px;
+            font-size: 20px;
+            letter-spacing: 3px;
             text-transform: uppercase;
-            font-weight: 700;
-            z-index: 999999;
-            padding: 10px 16px;
-            background: hsla(43, 74%, 49%, 0.1);
-            border: 1px solid hsla(43, 74%, 49%, 0.3);
-            border-radius: 10px;
+            font-weight: 900;
+            z-index: 99999999;
+            padding: 15px 30px;
+            background: linear-gradient(135deg, var(--gold), var(--gold-dark));
+            border: 3px solid var(--gold);
+            border-radius: 12px;
+            animation: flash 1s ease-in-out infinite;
             transition: all 0.3s ease;
         }
         .founder-link:hover {
-            background: hsla(43, 74%, 49%, 0.2);
-            border-color: hsla(43, 74%, 49%, 0.5);
-            transform: translateY(-2px);
+            transform: translateY(-2px) scale(1.05);
         }
 
         @media (max-width: 480px) {
